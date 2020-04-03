@@ -19,4 +19,4 @@ set(SRCS ${DolphinProcessSrc}
 
 set(CMAKE_INCLUE_CURRENT_DIR ON)
 
-add_library(py-dolphin-memory-engine SHARED ${SRCS})
+add_library(dolphin-memory-engine ${SRCS})
