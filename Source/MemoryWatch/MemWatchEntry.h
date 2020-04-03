@@ -3,8 +3,6 @@
 #include <string>
 #include <vector>
 
-#include <QString>
-
 #include "../Common/CommonTypes.h"
 #include "../Common/MemoryCommon.h"
 
@@ -12,14 +10,14 @@ class MemWatchEntry
 {
 public:
   MemWatchEntry();
-  MemWatchEntry(const QString label, const u32 consoleAddress, const Common::MemType type,
+  MemWatchEntry(const std::string& label, const u32 consoleAddress, const Common::MemType type,
                 const Common::MemBase = Common::MemBase::base_decimal,
                 const bool m_isUnsigned = false, const size_t length = 1,
                 const bool isBoundToPointer = false);
   MemWatchEntry(MemWatchEntry* entry);
   ~MemWatchEntry();
 
-  QString getLabel() const;
+  std::string getLabel() const;
   Common::MemType getType() const;
   u32 getConsoleAddress() const;
   bool isLocked() const;
@@ -31,7 +29,7 @@ public:
   int getPointerOffset(const int index) const;
   std::vector<int> getPointerOffsets() const;
   size_t getPointerLevel() const;
-  void setLabel(const QString& label);
+  void setLabel(const std::string& label);
   void setConsoleAddress(const u32 address);
   void setTypeAndLength(const Common::MemType type, const size_t length = 1);
   void setBase(const Common::MemBase base);
@@ -54,7 +52,7 @@ public:
 private:
   Common::MemOperationReturnCode writeMemoryToRAM(const char* memory, const size_t size);
 
-  QString m_label;
+  std::string m_label;
   u32 m_consoleAddress;
   bool m_lock = false;
   Common::MemType m_type;

@@ -13,8 +13,7 @@ set(SRCS ${DolphinProcessSrc}
          DolphinProcess/DolphinAccessor.cpp  
          Common/MemoryCommon.cpp
          MemoryWatch/MemWatchEntry.cpp   
-         MemoryWatch/MemWatchTreeNode.cpp
-         CheatEngineParser/CheatEngineParser.cpp
+         
          MemoryScanner/MemoryScanner.cpp
          )
 
