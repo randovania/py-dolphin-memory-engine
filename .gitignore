@@ -20,5 +20,6 @@ Source/.vscode/
 /build
 /venv
 /dist
-/_dolphin-memory-engine.cpp
+/_dolphin_memory_engine.cpp
 /dolphin_memory_engine.egg-info
+/*.pyd

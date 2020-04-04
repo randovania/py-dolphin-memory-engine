@@ -13,7 +13,7 @@
 namespace DolphinComm
 {
 IDolphinProcess* DolphinAccessor::m_instance = nullptr;
-DolphinAccessor::DolphinStatus DolphinAccessor::m_status = DolphinStatus::unHooked;
+DolphinStatus DolphinAccessor::m_status = DolphinStatus::unHooked;
 char* DolphinAccessor::m_updatedRAMCache = nullptr;
 
 void DolphinAccessor::init()
@@ -59,7 +59,7 @@ void DolphinAccessor::unHook()
   m_status = DolphinStatus::unHooked;
 }
 
-DolphinAccessor::DolphinStatus DolphinAccessor::getStatus()
+DolphinStatus DolphinAccessor::getStatus()
 {
   return m_status;
 }

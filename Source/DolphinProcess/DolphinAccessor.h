@@ -7,17 +7,17 @@
 
 namespace DolphinComm
 {
+enum class DolphinStatus
+{
+  hooked,
+  notRunning,
+  noEmu,
+  unHooked
+};
+
 class DolphinAccessor
 {
 public:
-  enum class DolphinStatus
-  {
-    hooked,
-    notRunning,
-    noEmu,
-    unHooked
-  };
-
   static void init();
   static void free();
   static void hook();

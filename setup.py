@@ -94,6 +94,11 @@ class CMakeBuild(build_ext):
         super().build_extension(ext)
 
 
+cpp_code_dir = os.path.join(os.path.dirname(__file__), "Source")
+custom_include_paths = [
+    cpp_code_dir,
+]
+
 extra_compile_args = []
 
 if is_windows:
@@ -107,10 +112,10 @@ ext_modules = [
     CMakeExtension(
         "_dolphin_memory_engine",
         [
-            os.path.join(file_dir, "_dolphin-memory-engine.pyx"),
+            os.path.join(file_dir, "_dolphin_memory_engine.pyx"),
         ],
         cmake_options={
-            "dir": "Source",
+            "dir": cpp_code_dir,
             "targets": {
                 "dolphin-memory-engine": "lib",
             },
@@ -131,7 +136,7 @@ def create_extension(template, kwds):
 
 cythonized_ext_modules = cythonize(
     ext_modules,
-    # include_path=custom_include_paths,
+    include_path=custom_include_paths,
     compiler_directives={
         'embedsignature': True,
         'language_level': '3',
@@ -139,8 +144,8 @@ cythonized_ext_modules = cythonize(
     create_extension=create_extension,
 )
 
-# for ext_module in cythonized_ext_modules:
-#     ext_module.include_dirs = custom_include_paths
+for ext_module in cythonized_ext_modules:
+    ext_module.include_dirs = custom_include_paths
 
 with open(os.path.join(file_dir, "README.md")) as readme_file:
     long_description = readme_file.read()
@@ -161,7 +166,7 @@ setup(
     version=VERSION,
     author='Henrique Gemignani',
     url='https://github.com/henriquegemignani/py-dolphin-memory-engine',
-    description='Python bindings for the nod library.',
+    description='Hooks into the memory of a running Dolphin processes, allowing access to the game memory.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=["dolphin_memory_engine"],
