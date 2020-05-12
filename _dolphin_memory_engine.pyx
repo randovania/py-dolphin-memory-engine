@@ -1,6 +1,6 @@
 from typing import List
 
-from libc.stdint cimport uint32_t, uint64_t
+from libc.stdint cimport uint8_t, uint32_t, uint64_t
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 
@@ -78,14 +78,19 @@ cdef extern from "MemoryWatch/MemWatchEntry.h":
         MemOperationReturnCode writeMemoryFromString(string)
 
 
-cdef buffer_to_value(char* buffer):
+cdef buffer_to_word(char* buffer):
     cdef uint32_t* value = <uint32_t*> buffer
     return value[0]
 
 
-cdef value_to_buffer(char* buffer, uint32_t value):
-    cdef uint32_t* b = <uint32_t*> buffer
-    b[0] = value
+cdef buffer_to_float(char* buffer):
+    cdef float* value = <float*> buffer
+    return value[0]
+
+
+cdef buffer_to_double(char* buffer):
+    cdef double* value = <double*> buffer
+    return value[0]
 
 
 cdef class MemWatch:
@@ -98,7 +103,7 @@ cdef class MemWatch:
         self.c_entry.addOffset(offset)
 
     def get_value(self):
-        return buffer_to_value(self.c_entry.getMemory())
+        return buffer_to_word(self.c_entry.getMemory())
         
     def read_memory_from_ram(self):
         return self.c_entry.readMemoryFromRAM() == MemOperationReturnCode.OK
@@ -128,7 +133,7 @@ def follow_pointers(console_address: int, pointer_offsets: List[int]) -> int:
     cdef char memory_buffer[4]
     for offset in pointer_offsets:
         if DolphinAccessor.readFromRAM(dolphinAddrToOffset(real_console_address), memory_buffer, 4, True):
-            real_console_address = buffer_to_value(memory_buffer)
+            real_console_address = buffer_to_word(memory_buffer)
             if DolphinAccessor.isValidConsoleAddress(real_console_address):
                 real_console_address += offset
             else:
@@ -139,16 +144,71 @@ def follow_pointers(console_address: int, pointer_offsets: List[int]) -> int:
     return real_console_address
 
 
+cdef _read_memory(console_address, char* memory_buffer, int size):
+    if not DolphinAccessor.readFromRAM(dolphinAddrToOffset(console_address), memory_buffer, size, True):
+        raise RuntimeError(f"Could not read memory at {console_address}")
+
+
+def read_byte(console_address: int) -> int:
+    cdef char memory_buffer[1]
+    _read_memory(console_address, memory_buffer, 1)
+    return (<uint8_t*> memory_buffer)[0]
+
+
 def read_word(console_address: int) -> int:
     cdef char memory_buffer[4]
-    if DolphinAccessor.readFromRAM(dolphinAddrToOffset(console_address), memory_buffer, 4, True):
-        return buffer_to_value(memory_buffer)
-    else:
+    _read_memory(console_address, memory_buffer, 4)
+    return (<uint32_t*> memory_buffer)[0]
+
+
+def read_float(console_address: int) -> float:
+    cdef char memory_buffer[4]
+    _read_memory(console_address, memory_buffer, 4)
+    return (<float*> memory_buffer)[0]
+
+
+def read_double(console_address: int) -> double:
+    cdef char memory_buffer[8]
+    _read_memory(console_address, memory_buffer, 8)    
+    return (<double*> memory_buffer)[0]
+
+
+def read_bytes(console_address: int, size: int) -> bytes:
+    memory = bytearray(size)
+    if not DolphinAccessor.readFromRAM(dolphinAddrToOffset(console_address), memory, size, False):
         raise RuntimeError(f"Could not read memory at {console_address}")
+    return bytes(memory)
+
+
+cdef _write_memory(console_address, char* memory_buffer, int size):
+    if not DolphinAccessor.writeToRAM(dolphinAddrToOffset(console_address), memory_buffer, size, True):
+        raise RuntimeError(f"Could not write memory at {console_address}")
+
+
+def write_byte(console_address: int, value: int):
+    cdef char memory_buffer[1]
+    (<uint8_t*> memory_buffer)[0] = value
+    _write_memory(console_address, memory_buffer, 1)
 
 
 def write_word(console_address: int, value: int):
     cdef char memory_buffer[4]
-    value_to_buffer(memory_buffer, value)
-    if not DolphinAccessor.writeToRAM(dolphinAddrToOffset(console_address), memory_buffer, 4, True):
+    (<uint32_t*> memory_buffer)[0] = value
+    _write_memory(console_address, memory_buffer, 4)
+
+
+def write_float(console_address: int, value: float):
+    cdef char memory_buffer[4]
+    (<float*> memory_buffer)[0] = value
+    _write_memory(console_address, memory_buffer, 4)
+
+
+def write_double(console_address: int, value: double):
+    cdef char memory_buffer[8]
+    (<double*> memory_buffer)[0] = value
+    _write_memory(console_address, memory_buffer, 8)
+
+
+def write_bytes(console_address: int, memory: bytes):
+    if not DolphinAccessor.writeToRAM(dolphinAddrToOffset(console_address), memory, len(memory), False):
         raise RuntimeError(f"Could not write memory at {console_address}")
