@@ -10,15 +10,8 @@ matrix:
   include:
     - os: linux
       services: docker
-      python: 3.5
-      env:
-        - RUN="docker run --rm -e PYTHON_VERSION=cp35-cp35m -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
-
-    - os: linux
-      services: docker
       python: 3.6
       env:
-        - INCLUDE_SDIST=true
         - RUN="docker run --rm -e PYTHON_VERSION=cp36-cp36m -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
 
     - os: linux
@@ -33,6 +26,7 @@ matrix:
       dist: xenial
       python: 3.8
       env:
+        - INCLUDE_SDIST=true
         - RUN="docker run --rm -e PYTHON_VERSION=cp38-cp38 -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
 
     - os: osx
