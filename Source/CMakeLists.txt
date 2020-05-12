@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(Dolphin-memory-engine)
+project(Dolphin-memory-engine CXX)
 
 if(WIN32)
     set(DolphinProcessSrc DolphinProcess/Windows/WindowsDolphinProcess.cpp)

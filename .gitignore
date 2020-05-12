@@ -16,9 +16,12 @@ Source/.vs/
 Source/.vscode/
 /Source/out
 
+*.pyc
+
 /.eggs
 /build
 /venv
+/linux-venv
 /dist
 /_dolphin_memory_engine.cpp
 /dolphin_memory_engine.egg-info
