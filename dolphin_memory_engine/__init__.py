@@ -1,3 +1,3 @@
 from _dolphin_memory_engine import *
 
-VERSION = "0.3.0"
+VERSION = "1.0.0"
