@@ -18,5 +18,7 @@ set(SRCS ${DolphinProcessSrc}
          )
 
 set(CMAKE_INCLUE_CURRENT_DIR ON)
+set(CXX_STANDARD_REQUIRED YES)
+set(CXX_STANDARD 14)
 
 add_library(dolphin-memory-engine ${SRCS})
