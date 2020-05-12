@@ -8,6 +8,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+
+#define _GNU_SOURCE
 #include <sys/uio.h>
 
 namespace DolphinComm

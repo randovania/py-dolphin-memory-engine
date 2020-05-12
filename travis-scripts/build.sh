@@ -9,6 +9,7 @@ if [ -n "$PYTHON_VERSION" ]; then
 fi
 
 python -m pip install Cython
+cmake --version
 python setup.py bdist_wheel
 
 if [ -n "$PYTHON_VERSION" ]; then
