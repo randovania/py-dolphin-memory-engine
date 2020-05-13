@@ -29,19 +29,19 @@ matrix:
         - INCLUDE_SDIST=true
         - RUN="docker run --rm -e PYTHON_VERSION=cp38-cp38 -v $(pwd):/host -w /host quay.io/pypa/manylinux2014_x86_64"
 
-    - os: osx
-      osx_image: xcode11
-      language: generic
-      env:
-        - PYENV_VERSION=3.6.9
-        - RUN=bash
+    # - os: osx
+    #   osx_image: xcode11
+    #   language: generic
+    #   env:
+    #     - PYENV_VERSION=3.6.9
+    #     - RUN=bash
 
-    - os: osx
-      osx_image: xcode11
-      language: generic
-      env:
-        - PYENV_VERSION=3.7.5
-        - RUN=bash
+    # - os: osx
+    #   osx_image: xcode11
+    #   language: generic
+    #   env:
+    #     - PYENV_VERSION=3.7.5
+    #     - RUN=bash
 
     - os: osx
       osx_image: xcode11
@@ -49,6 +49,9 @@ matrix:
       env:
         - PYENV_VERSION=3.8.0
         - RUN=bash
+
+  allow_failures:
+    - os: osx
 
 deploy:
   provider: script
