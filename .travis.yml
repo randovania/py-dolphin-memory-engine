@@ -12,14 +12,14 @@ matrix:
       services: docker
       python: 3.6
       env:
-        - RUN="docker run --rm -e PYTHON_VERSION=cp36-cp36m -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
+        - RUN="docker run --rm -e PYTHON_VERSION=cp36-cp36m -v $(pwd):/host -w /host quay.io/pypa/manylinux2014_x86_64"
 
     - os: linux
       services: docker
       dist: xenial
       python: 3.7
       env:
-        - RUN="docker run --rm -e PYTHON_VERSION=cp37-cp37m -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
+        - RUN="docker run --rm -e PYTHON_VERSION=cp37-cp37m -v $(pwd):/host -w /host quay.io/pypa/manylinux2014_x86_64"
 
     - os: linux
       services: docker
@@ -27,7 +27,7 @@ matrix:
       python: 3.8
       env:
         - INCLUDE_SDIST=true
-        - RUN="docker run --rm -e PYTHON_VERSION=cp38-cp38 -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
+        - RUN="docker run --rm -e PYTHON_VERSION=cp38-cp38 -v $(pwd):/host -w /host quay.io/pypa/manylinux2014_x86_64"
 
     - os: osx
       osx_image: xcode11
@@ -58,7 +58,7 @@ deploy:
     tags: true
 
 before_install:
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker pull henriquegemignani/docker-nod-ci; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker pull quay.io/pypa/manylinux2014_x86_64; fi
 - |
       if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         wget https://github.com/praekeltfoundation/travis-pyenv/releases/download/0.4.0/setup-pyenv.sh

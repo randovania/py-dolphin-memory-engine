@@ -2,6 +2,10 @@
 
 set -e
 
+curl -fSL https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh -o cmake.sh \
+    && bash cmake.sh --skip-license --prefix=/usr/local/ \
+    && rm -f cmake.sh
+
 if [ -n "$PYTHON_VERSION" ]; then
     echo "Adding $PYTHON_VERSION to path"
     export PATH="/opt/python/${PYTHON_VERSION}/bin:$PATH"
@@ -13,7 +17,7 @@ cmake --version
 python setup.py bdist_wheel
 
 if [ -n "$PYTHON_VERSION" ]; then
-    python -m auditwheel repair --plat manylinux2010_x86_64 dist/*-linux_x86_64.whl -w dist
+    python -m auditwheel repair --plat manylinux2014_x86_64 dist/*-linux_x86_64.whl -w dist
     rm dist/*-linux_x86_64.whl
 fi
 
