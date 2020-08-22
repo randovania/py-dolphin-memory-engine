@@ -36,12 +36,12 @@ matrix:
     #     - PYENV_VERSION=3.6.9
     #     - RUN=bash
 
-    # - os: osx
-    #   osx_image: xcode11
-    #   language: generic
-    #   env:
-    #     - PYENV_VERSION=3.7.5
-    #     - RUN=bash
+    - os: osx
+      osx_image: xcode11
+      language: generic
+      env:
+        - PYENV_VERSION=3.7.5
+        - RUN=bash
 
     - os: osx
       osx_image: xcode11
