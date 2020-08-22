@@ -1,0 +1,112 @@
+name: Python Package
+
+on:
+  pull_request:
+  push:
+    branches:
+      - '*'
+    tags:
+      - '*'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - 'macos-latest'
+          - 'windows-latest'
+        python:
+          - '3.6'
+          - '3.7'
+          - '3.8'
+          - '3.9'
+
+    runs-on: ${{ matrix.os }}
+
+    name: ${{ matrix.os }} - Python ${{ matrix.python }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+     
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade -r requirements-setuptools.txt
+          python -m pip install build
+
+      - name: build wheel
+        run: python -m build --wheel .
+
+      - name: build sdist
+        run: python -m build --sdist .
+        if: ${{ matrix.os == 'macos-latest' && matrix.python == '3.9' }}
+      
+      - name: Store the packages
+        uses: actions/upload-artifact@v2
+        with:
+          name: python-package-distributions
+          path: dist
+
+  linux-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - 'cp36-cp36m'
+          - 'cp37-cp37m'
+          - 'cp38-cp38'
+          - 'cp39-cp39'
+
+    runs-on: ubuntu-latest
+
+    name: Linux - Python ${{ matrix.python }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: build wheel
+        run: |
+          docker pull quay.io/pypa/manylinux2014_x86_64
+          docker run --rm -e PYTHON_VERSION=${{ matrix.python }} -v $(pwd):/host -w /host quay.io/pypa/manylinux2014_x86_64 ./travis-scripts/build.sh
+      
+      - name: Store the packages
+        uses: actions/upload-artifact@v2
+        with:
+          name: python-package-distributions
+          path: dist
+
+  pypi:
+    runs-on: 'ubuntu-latest'
+    needs:
+      - build
+      - linux-build
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v2
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish 📦 to TestPyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          password: ${{ secrets.testpypi_password }}
+          repository_url: https://test.pypi.org/legacy/
+      
+      - name: Publish 📦 to PyPI
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          password: ${{ secrets.pypi_password }}

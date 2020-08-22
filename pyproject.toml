@@ -1,0 +1,6 @@
+[build-system]
+requires = ["setuptools>=44.0.0", "wheel>=0.34.2", "Cython>=0.29.21", "setuptools_scm[toml]>=3.4"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+local_scheme = "no-local-version"
