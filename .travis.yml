@@ -50,9 +50,6 @@ matrix:
         - PYENV_VERSION=3.8.0
         - RUN=bash
 
-  allow_failures:
-    - os: osx
-
 deploy:
   provider: script
   script: python -m twine upload dist/*
