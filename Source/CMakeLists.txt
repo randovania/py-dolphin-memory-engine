@@ -3,11 +3,11 @@ project(Dolphin-memory-engine CXX)
 
 if(WIN32)
     set(DolphinProcessSrc DolphinProcess/Windows/WindowsDolphinProcess.cpp)
-endif(WIN32)
-
-if(UNIX)
-   set(DolphinProcessSrc DolphinProcess/Linux/LinuxDolphinProcess.cpp)
-endif(UNIX)
+elseif(UNIX)
+    set(DolphinProcessSrc DolphinProcess/Linux/LinuxDolphinProcess.cpp)
+else()
+    set(DolphinProcessSrc DolphinProcess/Dummy/DummyDolphinProcess.cpp)
+endif()
 
 set(SRCS ${DolphinProcessSrc}
          DolphinProcess/DolphinAccessor.cpp  
