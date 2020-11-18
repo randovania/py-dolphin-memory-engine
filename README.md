@@ -2,6 +2,7 @@
 
 [![Travis CI Build Status](https://travis-ci.org/henriquegemignani/py-dolphin-memory-engine.svg?branch=master)](https://travis-ci.org/henriquegemignani/py-dolphin-memory-engine)
 [![AppVeyor CI Build Status](https://ci.appveyor.com/api/projects/status/i5rb9s0w1l4ahbgj?svg=true)](https://ci.appveyor.com/project/henriquegemignani/py-dolphin-memory-engine)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhenriquegemignani%2Fpy-dolphin-memory-engine.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhenriquegemignani%2Fpy-dolphin-memory-engine?ref=badge_shield)
 
 A python library designed to read and write the emulated memory of [the Dolphin emulator](https://github.com/dolphin-emu/dolphin) during runtime. 
 
@@ -16,3 +17,6 @@ You need to have Dolphin running ***and*** _have the emulation started_ for this
 
 ## License
 This program is licensed under the MIT license which grants you the permission to do  anything you wish to with the software, as long as you preserve all copyright notices. (See the file LICENSE for the legal text.)
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhenriquegemignani%2Fpy-dolphin-memory-engine.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhenriquegemignani%2Fpy-dolphin-memory-engine?ref=badge_large)
