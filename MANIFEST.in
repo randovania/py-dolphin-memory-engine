@@ -1,0 +1,3 @@
+include *.pyx
+include *.pxd
+recursive-include Source *
