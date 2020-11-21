@@ -150,20 +150,9 @@ for ext_module in cythonized_ext_modules:
 with open(os.path.join(file_dir, "README.md")) as readme_file:
     long_description = readme_file.read()
 
-VERSION = None
-with open(os.path.join(file_dir, "dolphin_memory_engine", "__init__.py")) as init_file:
-    version_re = re.compile('VERSION\s*=\s*"([^"]+)"')
-    for init_line in init_file:
-        version_match = version_re.match(init_line)
-        if version_match:
-            VERSION = version_match.group(1)
-
-if VERSION is None:
-    raise Exception("Unable to find version in __init__.py")
-
 setup(
     name='dolphin-memory-engine',
-    version=VERSION,
+    use_scm_version=True,
     author='Henrique Gemignani',
     url='https://github.com/henriquegemignani/py-dolphin-memory-engine',
     description='Hooks into the memory of a running Dolphin processes, allowing access to the game memory.',
@@ -184,7 +173,6 @@ setup(
     setup_requires=[
         'Cython>=0.27.0',
         'setuptools>=38.6.0',
-        'twine>=1.11.0',
         'wheel>=0.31.0',
     ],
     cmdclass={
