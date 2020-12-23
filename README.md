@@ -16,3 +16,14 @@ You need to have Dolphin running ***and*** _have the emulation started_ for this
 
 ## License
 This program is licensed under the MIT license which grants you the permission to do  anything you wish to with the software, as long as you preserve all copyright notices. (See the file LICENSE for the legal text.)
+
+
+## Development Help
+
+To compile the extension in debug:
+
+$ python3 -m venv venv
+$ source venv/bin/activate
+$ python -m pip install Cython pytest
+$ python setup.py build_ext -g --inplace --force
+$ python -m pytest
