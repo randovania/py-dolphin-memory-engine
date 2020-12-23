@@ -37,6 +37,7 @@ void DolphinAccessor::free()
 void DolphinAccessor::hook()
 {
   init();
+  if (m_instance == nullptr) { return; }
   if (!m_instance->findPID())
   {
     m_status = DolphinStatus::notRunning;
