@@ -50,6 +50,8 @@ class CMakeBuild(build_ext):
         
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
+        if self.verbose:
+            build_args.append("--verbose")
         
         if is_windows:
             cmake_args += ['-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
@@ -80,8 +82,10 @@ class CMakeBuild(build_ext):
                 cwd=self.build_temp,
                 check=True
             )
-        
+
         for target, target_output in cmake_options["targets"].items():
+            if self.verbose:
+                print(['cmake', '--build', '.', '--target', target] + build_args)
             subprocess.run(
                 ['cmake', '--build', '.', '--target', target] + build_args,
                 cwd=self.build_temp,
