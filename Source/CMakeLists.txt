@@ -12,9 +12,7 @@ endif()
 set(SRCS ${DolphinProcessSrc}
          DolphinProcess/DolphinAccessor.cpp  
          Common/MemoryCommon.cpp
-         MemoryWatch/MemWatchEntry.cpp   
-         
-         MemoryScanner/MemoryScanner.cpp
+         MemoryWatch/MemWatchEntry.cpp
          )
 
 set(CMAKE_INCLUE_CURRENT_DIR ON)
