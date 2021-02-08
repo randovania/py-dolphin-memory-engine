@@ -127,7 +127,13 @@ def is_hooked() -> bool:
         return False
 
 
+def assert_hooked():
+    if not is_hooked():
+        raise RuntimeError("not hooked")
+
+
 def follow_pointers(console_address: int, pointer_offsets: List[int]) -> int:
+    assert_hooked()
     real_console_address = console_address
 
     cdef char memory_buffer[4]
@@ -145,6 +151,7 @@ def follow_pointers(console_address: int, pointer_offsets: List[int]) -> int:
 
 
 cdef _read_memory(console_address, char* memory_buffer, int size):
+    assert_hooked()
     if not DolphinAccessor.readFromRAM(dolphinAddrToOffset(console_address), memory_buffer, size, True):
         raise RuntimeError(f"Could not read memory at {console_address}")
 
@@ -181,6 +188,7 @@ def read_bytes(console_address: int, size: int) -> bytes:
 
 
 cdef _write_memory(console_address, char* memory_buffer, int size):
+    assert_hooked()
     if not DolphinAccessor.writeToRAM(dolphinAddrToOffset(console_address), memory_buffer, size, True):
         raise RuntimeError(f"Could not write memory at {console_address}")
 
@@ -210,5 +218,6 @@ def write_double(console_address: int, value: double):
 
 
 def write_bytes(console_address: int, memory: bytes):
+    assert_hooked()
     if not DolphinAccessor.writeToRAM(dolphinAddrToOffset(console_address), memory, len(memory), False):
         raise RuntimeError(f"Could not write memory at {console_address}")
