@@ -39,7 +39,7 @@ jobs:
           python-version: ${{ matrix.python }}
      
       - name: Install Python packages
-        run: python -m pip install --upgrade --use-feature=2020-resolver build pip pytest
+        run: python -m pip install --upgrade build pip pytest
 
       - name: build wheel
         run: python -m build --wheel
