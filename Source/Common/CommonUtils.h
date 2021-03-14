@@ -68,7 +68,7 @@ inline u32 dolphinAddrToOffset(u32 addr, u32 mem2_offset)
 
 inline u32 offsetToDolphinAddr(u32 offset, u32 mem2_offset)
 {
-  if (offset < 0 or offset >= 0x2000000)
+  if (offset < 0 || offset >= 0x2000000)
   {
     // MEM2, calculate correct address from MEM2 offset
     offset += 0x10000000;
