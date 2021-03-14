@@ -24,8 +24,8 @@ cdef extern from "Common/MemoryCommon.h" namespace "Common::MemOperationReturnCo
         OK
 
 cdef extern from "Common/CommonUtils.h" namespace "Common":
-    uint32_t dolphinAddrToOffset(uint32_t)
-    uint32_t offsetToDolphinAddr(uint32_t)
+    uint32_t dolphinAddrToOffset(uint32_t, uint32_t)
+    uint32_t offsetToDolphinAddr(uint32_t, uint32_t)
 
 
 cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm::DolphinStatus":
@@ -64,6 +64,9 @@ cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm":
 
         @staticmethod
         c_bool isValidConsoleAddress(uint32_t)
+
+        @staticmethod
+        uint32_t getMEM1ToMEM2Distance()
 
 
 cdef extern from "MemoryWatch/MemWatchEntry.h":
@@ -136,9 +139,11 @@ def follow_pointers(console_address: int, pointer_offsets: List[int]) -> int:
     assert_hooked()
     real_console_address = console_address
 
+    mem2Distance = DolphinAccessor.getMEM1ToMEM2Distance()
+
     cdef char memory_buffer[4]
     for offset in pointer_offsets:
-        if DolphinAccessor.readFromRAM(dolphinAddrToOffset(real_console_address), memory_buffer, 4, True):
+        if DolphinAccessor.readFromRAM(dolphinAddrToOffset(real_console_address, mem2Distance), memory_buffer, 4, True):
             real_console_address = buffer_to_word(memory_buffer)
             if DolphinAccessor.isValidConsoleAddress(real_console_address):
                 real_console_address += offset
@@ -152,7 +157,7 @@ def follow_pointers(console_address: int, pointer_offsets: List[int]) -> int:
 
 cdef _read_memory(console_address, char* memory_buffer, int size):
     assert_hooked()
-    if not DolphinAccessor.readFromRAM(dolphinAddrToOffset(console_address), memory_buffer, size, True):
+    if not DolphinAccessor.readFromRAM(dolphinAddrToOffset(console_address, DolphinAccessor.getMEM1ToMEM2Distance()), memory_buffer, size, True):
         raise RuntimeError(f"Could not read memory at {console_address}")
 
 
@@ -182,14 +187,14 @@ def read_double(console_address: int) -> double:
 
 def read_bytes(console_address: int, size: int) -> bytes:
     memory = bytearray(size)
-    if not DolphinAccessor.readFromRAM(dolphinAddrToOffset(console_address), memory, size, False):
+    if not DolphinAccessor.readFromRAM(dolphinAddrToOffset(console_address, DolphinAccessor.getMEM1ToMEM2Distance()), memory, size, False):
         raise RuntimeError(f"Could not read memory at {console_address}")
     return bytes(memory)
 
 
 cdef _write_memory(console_address, char* memory_buffer, int size):
     assert_hooked()
-    if not DolphinAccessor.writeToRAM(dolphinAddrToOffset(console_address), memory_buffer, size, True):
+    if not DolphinAccessor.writeToRAM(dolphinAddrToOffset(console_address, DolphinAccessor.getMEM1ToMEM2Distance()), memory_buffer, size, True):
         raise RuntimeError(f"Could not write memory at {console_address}")
 
 
@@ -219,5 +224,5 @@ def write_double(console_address: int, value: double):
 
 def write_bytes(console_address: int, memory: bytes):
     assert_hooked()
-    if not DolphinAccessor.writeToRAM(dolphinAddrToOffset(console_address), memory, len(memory), False):
+    if not DolphinAccessor.writeToRAM(dolphinAddrToOffset(console_address, DolphinAccessor.getMEM1ToMEM2Distance()), memory, len(memory), False):
         raise RuntimeError(f"Could not write memory at {console_address}")
