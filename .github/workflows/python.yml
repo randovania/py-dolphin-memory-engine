@@ -111,7 +111,7 @@ jobs:
         os:
           - {name: 'macOS', image: 'macos-latest', wheel: 'macosx_*'}
           - {name: 'Windows', image: 'windows-latest', wheel: 'win_amd64'}
-          - {name: 'Linux', image: 'ubuntu-latest', wheel: 'manylinux_2_17_x86_64.manylinux2014_x86_64'}
+          - {name: 'Linux', image: 'ubuntu-latest', wheel: 'manylinux2014_x86_64'}
         python:
           - {version: '3.7', wheel: 'cp37-cp37m'}
           - {version: '3.8', wheel: 'cp38-cp38'}
@@ -133,12 +133,12 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-            
+
       - name: Install Python packages
         run: python -m pip install --upgrade pip pytest
 
       - name: install built wheel
-        run: python -m pip install dist/*-${{ matrix.python.wheel }}-${{ matrix.os.wheel }}.whl
+        run: python -m pip install dist/*-${{ matrix.python.wheel }}-*${{ matrix.os.wheel }}.whl
         shell: bash
 
       - name: test
@@ -166,6 +166,6 @@ jobs:
       
       - name: Publish 📦 to PyPI
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.pypi_password }}

@@ -152,7 +152,9 @@ for ext_module in cythonized_ext_modules:
     ext_module.include_dirs = custom_include_paths
 
 setup(
-    use_scm_version=True,
+    use_scm_version={
+        "local_scheme": "no-local-version",
+    },
     cmdclass={
         'build_ext': CMakeBuild,
     },
