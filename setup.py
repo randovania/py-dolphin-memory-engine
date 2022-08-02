@@ -153,13 +153,6 @@ for ext_module in cythonized_ext_modules:
 
 setup(
     use_scm_version=True,
-    license='License :: OSI Approved :: MIT License',
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'Programming Language :: Python :: 3 :: Only',
-        'License :: OSI Approved :: MIT License',
-    ],
-    install_requires=[],
     cmdclass={
         'build_ext': CMakeBuild,
     },
