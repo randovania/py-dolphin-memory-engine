@@ -151,22 +151,8 @@ cythonized_ext_modules = cythonize(
 for ext_module in cythonized_ext_modules:
     ext_module.include_dirs = custom_include_paths
 
-with open(os.path.join(file_dir, "README.md")) as readme_file:
-    long_description = readme_file.read()
-
 setup(
-    name='dolphin-memory-engine',
     use_scm_version=True,
-    author='Henrique Gemignani',
-    url='https://github.com/henriquegemignani/py-dolphin-memory-engine',
-    description='Hooks into the memory of a running Dolphin processes, allowing access to the game memory.',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    packages=["dolphin_memory_engine"],
-    scripts=[
-    ],
-    package_data={
-    },
     license='License :: OSI Approved :: MIT License',
     classifiers=[
         'Development Status :: 4 - Beta',
