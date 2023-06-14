@@ -1,11 +1,8 @@
 # Python Dolphin Memory Engine
 
-[![Travis CI Build Status](https://travis-ci.org/henriquegemignani/py-dolphin-memory-engine.svg?branch=master)](https://travis-ci.org/henriquegemignani/py-dolphin-memory-engine)
-[![AppVeyor CI Build Status](https://ci.appveyor.com/api/projects/status/i5rb9s0w1l4ahbgj?svg=true)](https://ci.appveyor.com/project/henriquegemignani/py-dolphin-memory-engine)
-
 A python library designed to read and write the emulated memory of [the Dolphin emulator](https://github.com/dolphin-emu/dolphin) during runtime. 
 
-Binary wheels are available on pypi for Python 3.6, 3.7 and 3.8. Use `python -m pip install dolphin-memory-engine` with a modern enough version.
+Binary wheels are available on pypi for Python 3.7 to 3.11. Use `python -m pip install dolphin-memory-engine`.
 
 
 ## System requirements
