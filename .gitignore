@@ -16,13 +16,44 @@ Source/.vs/
 Source/.vscode/
 /Source/out
 
-*.pyc
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 
-/.eggs
-/build
-/venv
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 /linux-venv
-/dist
+
+# Cython
 /_dolphin_memory_engine.cpp
-/dolphin_memory_engine.egg-info
-/*.pyd
+
+# Project
+/python_src/dolphin_memory_engine/version.py
