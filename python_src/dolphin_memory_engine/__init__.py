@@ -1,4 +1,4 @@
-from _dolphin_memory_engine import (
+from dolphin_memory_engine._dolphin_memory_engine import (
     MemWatch, 
     assert_hooked, 
     follow_pointers, 
