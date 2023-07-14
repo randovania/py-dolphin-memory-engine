@@ -2,7 +2,7 @@
 
 A python library designed to read and write the emulated memory of [the Dolphin emulator](https://github.com/dolphin-emu/dolphin) during runtime. 
 
-Binary wheels are available on pypi for Python 3.7 to 3.11. Use `python -m pip install dolphin-memory-engine`.
+Binary wheels are available on pypi for Python 3.8 to 3.12. Use `python -m pip install dolphin-memory-engine`.
 
 
 ## System requirements
