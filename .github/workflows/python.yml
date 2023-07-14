@@ -131,10 +131,10 @@ jobs:
           path: dist/
 
       - name: Install Python packages
-        run: python -m pip install --upgrade pip pytest
+        run: python -m pip install --upgrade pip
 
       - name: install built wheel
-        run: python -m pip install dist/*-${{ matrix.python.wheel }}-*${{ matrix.os.wheel }}.whl
+        run: python -m pip install "$(ls dist/*-${{ matrix.python.wheel }}-*${{ matrix.os.wheel }}.whl)[test]"
         shell: bash
 
       - name: test

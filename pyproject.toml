@@ -31,6 +31,11 @@ content-type = "text/markdown"
 [project.urls]
 Homepage = "https://github.com/henriquegemignani/py-dolphin-memory-engine"
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+
 [tool.setuptools_scm]
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
