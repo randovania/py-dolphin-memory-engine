@@ -40,3 +40,27 @@ test = [
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
 write_to = "python_src/dolphin_memory_engine/version.py"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+
+[tool.ruff]
+line-length = 120
+select = [
+    "E", "F", "W", "C90", "I", "UP", "C4",
+    "RSE",
+    "TCH",
+    "PTH",
+    "COM818", "COM819",
+    "ISC",
+    "PIE",
+    "PT",
+
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+]
+
+# Version to target for generated code.
+target-version = "py38"
