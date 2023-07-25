@@ -2,7 +2,8 @@
 requires = [
     "setuptools>=61.2",
     "Cython>=0.29.21",
-    "setuptools_scm[toml]>=6.4"
+    "setuptools_scm[toml]>=6.4",
+    "setuptools-cmake-helper>=0.1.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -34,15 +35,21 @@ Homepage = "https://github.com/henriquegemignani/py-dolphin-memory-engine"
 [project.optional-dependencies]
 test = [
     "pytest",
+    "pytest-cov",
 ]
 
 [tool.setuptools_scm]
-version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
 write_to = "python_src/dolphin_memory_engine/version.py"
+git_describe_command = "git describe --dirty --tags --long --match v[0-9]*"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
+xfail_strict = true
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+]
 
 [tool.ruff]
 line-length = 120
@@ -64,3 +71,7 @@ select = [
 
 # Version to target for generated code.
 target-version = "py38"
+
+[tool.black]
+line-length = 120
+target-version = ['py38', 'py39', 'py310', 'py311']
