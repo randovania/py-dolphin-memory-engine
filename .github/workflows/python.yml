@@ -48,7 +48,7 @@ jobs:
         run: python -m build
       
       - name: Store the packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
           path: dist
@@ -93,7 +93,7 @@ jobs:
           rm dist/*-linux_x86_64.whl
       
       - name: Store the packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
           path: dist
