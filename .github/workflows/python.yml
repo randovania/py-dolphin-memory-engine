@@ -145,7 +145,7 @@ jobs:
         run: python -m pytest --cov
 
       - name: codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
 
   pypi:
     runs-on: 'ubuntu-latest'
