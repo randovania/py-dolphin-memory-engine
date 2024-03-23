@@ -134,9 +134,8 @@ def assert_hooked():
     if not is_hooked():
         raise RuntimeError("not hooked")
 
-def get_status():
-    a = DolphinAccessor.getStatus()
-    return a.value
+def get_status() -> DolphinStatus:
+    return DolphinAccessor.getStatus()
 
 
 def follow_pointers(console_address: int, pointer_offsets: List[int]) -> int:
