@@ -11,6 +11,48 @@
 
 namespace Common
 {
+static u32 s_mem1_size_real;
+static u32 s_mem2_size_real;
+static u32 s_mem1_size;
+static u32 s_mem2_size;
+static u32 s_mem1_end;
+static u32 s_mem2_end;
+
+u32 GetMEM1SizeReal()
+{
+  return s_mem1_size_real;
+}
+u32 GetMEM2SizeReal()
+{
+  return s_mem2_size_real;
+}
+u32 GetMEM1Size()
+{
+  return s_mem1_size;
+}
+u32 GetMEM2Size()
+{
+  return s_mem2_size;
+}
+u32 GetMEM1End()
+{
+  return s_mem1_end;
+}
+u32 GetMEM2End()
+{
+  return s_mem2_end;
+}
+
+void UpdateMemoryValues()
+{
+  s_mem1_size_real = 24u * 1024 * 1024;
+  s_mem2_size_real = 64u * 1024 * 1024;
+  s_mem1_size = NextPowerOf2(GetMEM1SizeReal());
+  s_mem2_size = NextPowerOf2(GetMEM2SizeReal());
+  s_mem1_end = MEM1_START + GetMEM1SizeReal();
+  s_mem2_end = MEM2_START + GetMEM2SizeReal();
+}
+
 size_t getSizeForType(const MemType type, const size_t length)
 {
   switch (type)
@@ -57,7 +99,7 @@ bool shouldBeBSwappedForType(const MemType type)
   }
 }
 
-int getNbrBytesAlignementForType(const MemType type)
+int getNbrBytesAlignmentForType(const MemType type)
 {
   switch (type)
   {
@@ -505,4 +547,4 @@ std::string formatMemoryToString(const char* memory, const MemType type, const s
     break;
   }
 }
-} // namespace Common
+}  // namespace Common

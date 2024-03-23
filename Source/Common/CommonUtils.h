@@ -4,8 +4,16 @@
 #include <byteswap.h>
 #elif _WIN32
 #include <stdlib.h>
-#elif defined(__APPLE__)
-#include <libkern/OSByteOrder.h>
+#elif __APPLE__
+#define bswap_16(value) ((((value)&0xff) << 8) | ((value) >> 8))
+
+#define bswap_32(value)                                                                            \
+  (((uint32_t)bswap_16((uint16_t)((value)&0xffff)) << 16) |                                        \
+   (uint32_t)bswap_16((uint16_t)((value) >> 16)))
+
+#define bswap_64(value)                                                                            \
+  (((uint64_t)bswap_32((uint32_t)((value)&0xffffffff)) << 32) |                                    \
+   (uint64_t)bswap_32((uint32_t)((value) >> 32)))
 #endif
 
 #include "CommonTypes.h"
@@ -27,7 +35,7 @@ inline u64 bSwap64(u64 data)
   return _byteswap_uint64(data);
 }
 
-#elif __linux__
+#else
 inline u16 bSwap16(u16 data)
 {
   return bswap_16(data);
@@ -40,20 +48,20 @@ inline u64 bSwap64(u64 data)
 {
   return bswap_64(data);
 }
-#elif defined(__APPLE__)
-inline u16 bSwap16(u16 data)
-{
-  return OSSwapInt16(data);
-}
-inline u32 bSwap32(u32 data)
-{
-  return OSSwapInt32(data);
-}
-inline u64 bSwap64(u64 data)
-{
-  return OSSwapInt64(data);
-}
 #endif
+
+constexpr u32 NextPowerOf2(u32 value)
+{
+  --value;
+  value |= value >> 1;
+  value |= value >> 2;
+  value |= value >> 4;
+  value |= value >> 8;
+  value |= value >> 16;
+  ++value;
+
+  return value;
+};
 
 inline u32 dolphinAddrToOffset(u32 addr, bool considerAram)
 {
@@ -63,14 +71,14 @@ inline u32 dolphinAddrToOffset(u32 addr, bool considerAram)
     addr -= ARAM_START;
   }
   // MEM1 address
-  else if (addr >= MEM1_START && addr < MEM1_END)
+  else if (addr >= MEM1_START && addr < GetMEM1End())
   {
     addr -= MEM1_START;
     if (considerAram)
       addr += ARAM_FAKESIZE;
   }
   // MEM2 address
-  else if (addr >= MEM2_START && addr < MEM2_END)
+  else if (addr >= MEM2_START && addr < GetMEM2End())
   {
     addr -= MEM2_START;
     addr += (MEM2_START - MEM1_START);
@@ -86,7 +94,7 @@ inline u32 offsetToDolphinAddr(u32 offset, bool considerAram)
     {
       offset += ARAM_START;
     }
-    else if (offset >= ARAM_FAKESIZE && offset < ARAM_FAKESIZE + MEM1_SIZE)
+    else if (offset >= ARAM_FAKESIZE && offset < ARAM_FAKESIZE + GetMEM1SizeReal())
     {
       offset += MEM1_START;
       offset -= ARAM_FAKESIZE;
@@ -94,11 +102,12 @@ inline u32 offsetToDolphinAddr(u32 offset, bool considerAram)
   }
   else
   {
-    if (offset < MEM1_SIZE)
+    if (offset < GetMEM1SizeReal())
     {
       offset += MEM1_START;
     }
-    else if (offset >= MEM2_START - MEM1_START && offset < MEM2_START - MEM1_START + MEM2_SIZE)
+    else if (offset >= MEM2_START - MEM1_START &&
+             offset < MEM2_START - MEM1_START + GetMEM2SizeReal())
     {
       offset += MEM2_START;
       offset -= (MEM2_START - MEM1_START);
@@ -111,16 +120,16 @@ inline u32 offsetToCacheIndex(u32 offset, bool considerAram)
 {
   if (considerAram)
   {
-    if (offset >= ARAM_FAKESIZE && offset < MEM1_SIZE + ARAM_FAKESIZE)
+    if (offset >= ARAM_FAKESIZE && offset < GetMEM1SizeReal() + ARAM_FAKESIZE)
     {
       offset -= (ARAM_FAKESIZE - ARAM_SIZE);
     }
   }
   else
   {
-    if (offset >= MEM2_START - MEM1_START && offset < MEM2_START - MEM1_START + MEM2_SIZE)
+    if (offset >= MEM2_START - MEM1_START && offset < MEM2_START - MEM1_START + GetMEM2SizeReal())
     {
-      offset -= (MEM2_START - MEM1_END);
+      offset -= (MEM2_START - GetMEM1End());
     }
   }
   return offset;
@@ -130,18 +139,18 @@ inline u32 cacheIndexToOffset(u32 cacheIndex, bool considerAram)
 {
   if (considerAram)
   {
-    if (cacheIndex >= ARAM_SIZE && cacheIndex < MEM1_SIZE + ARAM_SIZE)
+    if (cacheIndex >= ARAM_SIZE && cacheIndex < GetMEM1SizeReal() + ARAM_SIZE)
     {
       cacheIndex += (ARAM_FAKESIZE - ARAM_SIZE);
     }
   }
   else
   {
-    if (cacheIndex >= MEM1_SIZE && cacheIndex < MEM1_SIZE + MEM2_SIZE)
+    if (cacheIndex >= GetMEM1SizeReal() && cacheIndex < GetMEM1SizeReal() + GetMEM2SizeReal())
     {
-      cacheIndex += (MEM2_START - MEM1_END);
+      cacheIndex += (MEM2_START - GetMEM1End());
     }
   }
   return cacheIndex;
 }
-} // namespace Common
+}  // namespace Common
