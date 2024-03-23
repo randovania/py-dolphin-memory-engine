@@ -28,8 +28,8 @@ cdef extern from "Common/CommonUtils.h" namespace "Common":
     uint32_t offsetToDolphinAddr(uint32_t, c_bool)
 
 
-cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm::DolphinStatus":
-    cdef enum DolphinStatus:
+cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm":
+    cpdef enum class DolphinStatus:
         hooked
         notRunning
         noEmu
@@ -134,8 +134,9 @@ def assert_hooked():
     if not is_hooked():
         raise RuntimeError("not hooked")
 
-def get_status() -> DolphinStatus:
-    return DolphinAccessor.getStatus()
+def get_status():
+    a = DolphinAccessor.getStatus()
+    return a.value
 
 
 def follow_pointers(console_address: int, pointer_offsets: List[int]) -> int:
