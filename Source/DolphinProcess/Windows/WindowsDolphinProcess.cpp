@@ -2,10 +2,26 @@
 
 #include "WindowsDolphinProcess.h"
 #include "../../Common/CommonUtils.h"
+#include "../../Common/MemoryCommon.h"
 
 #include <Psapi.h>
+#ifdef UNICODE
+#include <codecvt>
+#endif
+#include <cstdlib>
 #include <string>
 #include <tlhelp32.h>
+
+namespace
+{
+#ifdef UNICODE
+std::wstring utf8_to_wstring(const std::string& str)
+{
+  std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+  return myconv.from_bytes(str);
+}
+#endif
+}  // namespace
 
 namespace DolphinComm
 {
@@ -15,15 +31,31 @@ bool WindowsDolphinProcess::findPID()
   PROCESSENTRY32 entry;
   entry.dwSize = sizeof(PROCESSENTRY32);
 
+  static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
+
   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 
+  m_PID = -1;
   if (Process32First(snapshot, &entry) == TRUE)
   {
     do
     {
-      if (std::string(entry.szExeFile) == "Dolphin.exe" ||
-          std::string(entry.szExeFile) == "DolphinQt2.exe" ||
-          std::string(entry.szExeFile) == "DolphinWx.exe")
+#ifdef UNICODE
+      const std::wstring exeFile{entry.szExeFile};
+      const bool match{s_dolphinProcessName ?
+                           (exeFile == utf8_to_wstring(s_dolphinProcessName) ||
+                            exeFile == utf8_to_wstring(s_dolphinProcessName) + L".exe") :
+                           (exeFile == L"Dolphin.exe" || exeFile == L"DolphinQt2.exe" ||
+                            exeFile == L"DolphinWx.exe")};
+#else
+      const std::string exeFile{entry.szExeFile};
+      const bool match{s_dolphinProcessName ?
+                           (exeFile == s_dolphinProcessName ||
+                            exeFile == std::string(s_dolphinProcessName) + ".exe") :
+                           (exeFile == "Dolphin.exe" || exeFile == "DolphinQt2.exe" ||
+                            exeFile == "DolphinWx.exe")};
+#endif
+      if (match)
       {
         m_PID = entry.th32ProcessID;
         break;
@@ -52,15 +84,14 @@ bool WindowsDolphinProcess::obtainEmuRAMInformations()
        VirtualQueryEx(m_hDolphin, p, &info, sizeof(info)) == sizeof(info); p += info.RegionSize)
   {
     // Check region size so that we know it's MEM2
-    if (!m_MEM2Present && info.RegionSize == 0x4000000)
+    if (!m_MEM2Present && info.RegionSize == Common::GetMEM2Size())
     {
       u64 regionBaseAddress = 0;
       std::memcpy(&regionBaseAddress, &(info.BaseAddress), sizeof(info.BaseAddress));
       if (MEM1Found && regionBaseAddress > m_emuRAMAddressStart + 0x10000000)
       {
         // In some cases MEM2 could actually be before MEM1. Once we find MEM1, ignore regions of
-        // this size that are too far away. There apparently are other non-MEM2 regions of size
-        // 0x4000000.
+        // this size that are too far away. There apparently are other non-MEM2 regions of 64 MiB.
         break;
       }
       // View the comment for MEM1.
@@ -75,7 +106,7 @@ bool WindowsDolphinProcess::obtainEmuRAMInformations()
         }
       }
     }
-    else if (info.RegionSize == 0x2000000 && info.Type == MEM_MAPPED)
+    else if (info.RegionSize == Common::GetMEM1Size() && info.Type == MEM_MAPPED)
     {
       // Here, it's likely the right page, but it can happen that multiple pages with these criteria
       // exists and have nothing to do with the emulated memory. Only the right page has valid
@@ -96,7 +127,7 @@ bool WindowsDolphinProcess::obtainEmuRAMInformations()
           {
             u64 aramCandidate = 0;
             std::memcpy(&aramCandidate, &(info.BaseAddress), sizeof(info.BaseAddress));
-            if (aramCandidate == m_emuRAMAddressStart + 0x2000000)
+            if (aramCandidate == m_emuRAMAddressStart + Common::GetMEM1Size())
             {
               m_emuARAMAdressStart = aramCandidate;
               m_ARAMAccessible = true;
@@ -238,5 +269,5 @@ bool WindowsDolphinProcess::writeToRAM(const u32 offset, const char* buffer, con
   delete[] bufferCopy;
   return (bResult && nread == size);
 }
-} // namespace DolphinComm
+}  // namespace DolphinComm
 #endif

@@ -2,14 +2,15 @@
 
 #include "LinuxDolphinProcess.h"
 #include "../../Common/CommonUtils.h"
+#include "../../Common/MemoryCommon.h"
 
+#include <cstdlib>
 #include <cstring>
 #include <dirent.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-
 #include <sys/uio.h>
 #include <vector>
 
@@ -50,7 +51,7 @@ bool LinuxDolphinProcess::obtainEmuRAMInformations()
     u32 offset = 0;
     std::string offsetStr("0x" + lineData[2]);
     offset = std::stoul(offsetStr, nullptr, 16);
-    if (offset != 0 && offset != 0x2040000)
+    if (offset != 0 && offset != Common::GetMEM1Size() + 0x40000)
       continue;
 
     u64 firstAddress = 0;
@@ -62,7 +63,8 @@ bool LinuxDolphinProcess::obtainEmuRAMInformations()
     firstAddress = std::stoul(firstAddressStr, nullptr, 16);
     SecondAddress = std::stoul(secondAddressStr, nullptr, 16);
 
-    if (SecondAddress - firstAddress == 0x4000000 && offset == 0x2040000)
+    if (SecondAddress - firstAddress == Common::GetMEM2Size() &&
+        offset == Common::GetMEM1Size() + 0x40000)
     {
       m_MEM2AddressStart = firstAddress;
       m_MEM2Present = true;
@@ -70,14 +72,14 @@ bool LinuxDolphinProcess::obtainEmuRAMInformations()
         break;
     }
 
-    if (SecondAddress - firstAddress == 0x2000000)
+    if (SecondAddress - firstAddress == Common::GetMEM1Size())
     {
       if (offset == 0x0)
       {
         m_emuRAMAddressStart = firstAddress;
         MEM1Found = true;
       }
-      else if (offset == 0x2040000)
+      else if (offset == Common::GetMEM1Size() + 0x40000)
       {
         m_emuARAMAdressStart = firstAddress;
         m_ARAMAccessible = true;
@@ -105,6 +107,9 @@ bool LinuxDolphinProcess::findPID()
   if (directoryPointer == nullptr)
     return false;
 
+  static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
+
+  m_PID = -1;
   struct dirent* directoryEntry = nullptr;
   while (m_PID == -1 && (directoryEntry = readdir(directoryPointer)))
   {
@@ -116,7 +121,11 @@ bool LinuxDolphinProcess::findPID()
     std::string line;
     aCmdLineFile.open("/proc/" + std::string(directoryEntry->d_name) + "/comm");
     getline(aCmdLineFile, line);
-    if (line == "dolphin-emu" || line == "dolphin-emu-qt2" || line == "dolphin-emu-wx")
+
+    const bool match{s_dolphinProcessName ? line == s_dolphinProcessName :
+                                            (line == "dolphin-emu" || line == "dolphin-emu-qt2" ||
+                                             line == "dolphin-emu-wx")};
+    if (match)
       m_PID = aPID;
 
     aCmdLineFile.close();
@@ -264,5 +273,5 @@ bool LinuxDolphinProcess::writeToRAM(const u32 offset, const char* buffer, const
 
   return true;
 }
-} // namespace DolphinComm
+}  // namespace DolphinComm
 #endif
