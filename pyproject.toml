@@ -15,13 +15,13 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = []
 dynamic = ["version"]
 
@@ -53,6 +53,8 @@ filterwarnings = [
 
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.lint]
 select = [
     "E", "F", "W", "C90", "I", "UP", "C4",
     "RSE",
@@ -64,14 +66,13 @@ select = [
     "PT",
 
     "PLC",
+
     "PLE",
-    "PLR",
+    "PLR0402", "PLR1711", "PLR1722", "PLR0206",
+    "PLR0133", "PLR0124",
     "PLW",
+    "SIM101",
 ]
-
-# Version to target for generated code.
-target-version = "py38"
-
-[tool.black]
-line-length = 120
-target-version = ['py38', 'py39', 'py310', 'py311']
+extend-ignore = [
+    "ISC001",  # may cause conflicts with formatter
+]
