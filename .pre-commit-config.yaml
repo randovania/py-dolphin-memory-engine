@@ -1,9 +1,6 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 
-default_language_version:
-    python: python3.8
-
 repos:
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
@@ -11,8 +8,4 @@ repos:
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix ]
-
--   repo: https://github.com/psf/black
-    rev: 24.8.0
-    hooks:
-      - id: black
+      - id: ruff-format
