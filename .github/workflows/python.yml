@@ -82,7 +82,7 @@ jobs:
           CIBW_TEST_COMMAND: pytest {project}/tests
           
       - name: codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
   
       - name: Store the packages
         uses: actions/upload-artifact@v4
