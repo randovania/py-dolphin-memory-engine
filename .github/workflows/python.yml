@@ -55,7 +55,7 @@ jobs:
         run: pipx run build --sdist
 
       - name: Store the packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: python-package-source
           path: dist
@@ -85,7 +85,7 @@ jobs:
         uses: codecov/codecov-action@v5
   
       - name: Store the packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: python-package-${{ matrix.only }}
           path: dist
