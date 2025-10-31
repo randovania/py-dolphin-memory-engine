@@ -12,7 +12,6 @@ name = "dolphin-memory-engine"
 description = "Hooks into the memory of a running Dolphin processes, allowing access to the game memory."
 authors = [{name = "Henrique Gemignani"}]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.9",
@@ -23,6 +22,7 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = []
+license = "MIT"
 dynamic = ["version"]
 
 [project.readme]
@@ -41,7 +41,7 @@ test = [
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
 write_to = "python_src/dolphin_memory_engine/version.py"
-git_describe_command = "git describe --dirty --tags --long --match v[0-9]*"
+scm.git.describe_command = "git describe --dirty --tags --long --match v[0-9]*"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
