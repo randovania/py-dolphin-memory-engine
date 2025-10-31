@@ -40,7 +40,7 @@ jobs:
       CIBW_ARCHS_LINUX: x86_64
       CIBW_ARCHS_MACOS: arm64 x86_64
       CIBW_ARCHS_WINDOWS: AMD64
-      CIBW_SKIP: pp* *musllinux*
+      CIBW_SKIP: pp* *musllinux* cp*t*
 
   build-sdist:
     name: sdist
