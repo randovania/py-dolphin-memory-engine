@@ -12,7 +12,6 @@ name = "dolphin-memory-engine"
 description = "Hooks into the memory of a running Dolphin processes, allowing access to the game memory."
 authors = [{name = "Henrique Gemignani"}]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.9",
@@ -23,6 +22,7 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = []
+license = "MIT"
 dynamic = ["version"]
 
 [project.readme]
