@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     "setuptools>=61.2",
-    "Cython>=0.29.21",
+    "Cython>=3.2.0b3",
     "setuptools_scm[toml]>=6.4",
     "setuptools-cmake-helper>=0.1.1",
 ]

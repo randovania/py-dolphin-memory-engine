@@ -27,6 +27,10 @@ ext_modules = [
         language="c++",
         extra_compile_args=extra_compile_args,
         extra_objects=[],
+        define_macros=[
+            ("Py_LIMITED_API", 0x03090000),
+        ],
+        py_limited_api=True,
     )
 ]
 
@@ -41,4 +45,9 @@ setup(
         "build_ext": setuptools_cmake_helper.CMakeBuild,
     },
     ext_modules=cythonized_ext_modules,
+    options={
+        "bdist_wheel": {
+            "py_limited_api": "cp39",
+        }
+    },
 )
