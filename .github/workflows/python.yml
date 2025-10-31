@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Install cibuildwheel
-        run: pipx install cibuildwheel==2.21.3
+        run: pipx install cibuildwheel==3.2.1
       - id: set-matrix
         run: |
           MATRIX=$(
@@ -28,9 +28,9 @@ jobs:
               cibuildwheel --print-build-identifiers --platform linux \
               | jq -nRc '{"only": inputs, "os": "ubuntu-latest"}' \
               && cibuildwheel --print-build-identifiers --platform macos --archs x86_64 \
-              | jq -nRc '{"only": inputs, "os": "macos-13"}' \
+              | jq -nRc '{"only": inputs, "os": "macos-15-intel"}' \
               && cibuildwheel --print-build-identifiers --platform macos --archs arm64 \
-              | jq -nRc '{"only": inputs, "os": "macos-14"}' \
+              | jq -nRc '{"only": inputs, "os": "macos-latest"}' \
               && cibuildwheel --print-build-identifiers --platform windows \
               | jq -nRc '{"only": inputs, "os": "windows-latest"}'
             } | jq -sc
