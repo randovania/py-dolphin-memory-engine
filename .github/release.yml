@@ -3,5 +3,5 @@ changelog:
     labels:
       - ignore-for-release
     authors:
-      - pre-commit-ci
-      - dependabot
+      - pre-commit-ci[bot]
+      - dependabot[bot]
