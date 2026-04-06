@@ -74,7 +74,7 @@ jobs:
           fetch-depth: 0
           submodules: 'recursive'
   
-      - uses: pypa/cibuildwheel@v3.4.0
+      - uses: pypa/cibuildwheel@v3.4.1
         with:
           only: ${{ matrix.only }}
           output-dir: dist
