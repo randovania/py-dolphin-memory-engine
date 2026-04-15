@@ -9,7 +9,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fstream>
-#include <format>
 #include <iostream>
 #include <sstream>
 #include <string>
