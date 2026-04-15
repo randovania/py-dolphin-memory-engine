@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <dirent.h>
+#include <errno.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -167,8 +168,16 @@ bool LinuxDolphinProcess::readFromRAM(const u32 offset, char* buffer, const size
   remote.iov_len = size;
 
   nread = process_vm_readv(m_PID, &local, 1, &remote, 1, 0);
-  if (nread != size)
+  if (nread != size) {
+    std::stringstream err_msg;
+    if (nread == -1) {
+      err_msg << "got OS error " << errno << ": " << strerror(errno); 
+    } else {
+      err_msg << "expected " << size << " bytes, got " << nread;
+    }
+    m_error = err_msg.str();
     return false;
+  }
 
   if (withBSwap)
   {
@@ -268,10 +277,20 @@ bool LinuxDolphinProcess::writeToRAM(const u32 offset, const char* buffer, const
 
   nwrote = process_vm_writev(m_PID, &local, 1, &remote, 1, 0);
   delete[] bufferCopy;
-  if (nwrote != size)
+  if (nwrote != size) {
+    std::stringstream err_msg;
+    if (nwrote == -1) {
+      err_msg << "got OS error " << errno << ": " << strerror(errno); 
+    } else {
+      err_msg << "expected " << size << " bytes, wrote " << nwrote;
+    }
+    m_error = err_msg.str();
     return false;
+  }
 
   return true;
 }
+
 }  // namespace DolphinComm
 #endif
+

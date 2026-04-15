@@ -28,6 +28,7 @@ public:
   static int getPID();
   static u64 getEmuRAMAddressStart();
   static DolphinStatus getStatus();
+  static std::string getLastErrorMessage();
   static bool isARAMAccessible();
   static u64 getARAMAddressStart();
   static bool isMEM2Present();
