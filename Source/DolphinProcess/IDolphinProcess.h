@@ -2,6 +2,7 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 
 #include "../Common/CommonTypes.h"
 
@@ -19,6 +20,7 @@ public:
                           const bool withBSwap) = 0;
 
   int getPID() const { return m_PID; };
+  std::string getLastErrorMessage() const { return m_error; };
   u64 getEmuRAMAddressStart() const { return m_emuRAMAddressStart; };
   bool isMEM2Present() const { return m_MEM2Present; };
   bool isARAMAccessible() const { return m_ARAMAccessible; };
@@ -33,6 +35,7 @@ public:
 
 protected:
   int m_PID = -1;
+  std::string m_error = "";
   u64 m_emuRAMAddressStart = 0;
   u64 m_emuARAMAdressStart = 0;
   u64 m_MEM2AddressStart = 0;

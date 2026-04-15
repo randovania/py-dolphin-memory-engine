@@ -67,6 +67,11 @@ DolphinAccessor::DolphinStatus DolphinAccessor::getStatus()
   return m_status;
 }
 
+std::string DolphinAccessor::getLastErrorMessage()
+{
+  return m_instance->getLastErrorMessage();
+}
+
 bool DolphinAccessor::readFromRAM(const u32 offset, char* buffer, const size_t size,
                                   const bool withBSwap)
 {

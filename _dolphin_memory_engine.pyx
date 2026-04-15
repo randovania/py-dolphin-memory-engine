@@ -58,10 +58,13 @@ cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm":
 
         @staticmethod
         int getPID()
-        
+
         @staticmethod
         DolphinStatus getStatus()
 
+        @staticmethod
+        string getLastErrorMessage()
+        
         @staticmethod
         c_bool isValidConsoleAddress(uint32_t)
 
@@ -153,7 +156,7 @@ def follow_pointers(console_address: int, pointer_offsets: List[int]) -> int:
             else:
                 raise RuntimeError(f"Address {real_console_address} is not valid")
         else:
-            raise RuntimeError(f"Could not read memory at {real_console_address}")
+            raise RuntimeError(f"Could not read memory at {real_console_address}: {}", DolphinAccessor.getLastErrorMessage())
 
     return real_console_address
 
@@ -161,7 +164,7 @@ def follow_pointers(console_address: int, pointer_offsets: List[int]) -> int:
 cdef _read_memory(console_address, char* memory_buffer, int size):
     assert_hooked()
     if not DolphinAccessor.readFromRAM(dolphinAddrToOffset(console_address, DolphinAccessor.isARAMAccessible()), memory_buffer, size, True):
-        raise RuntimeError(f"Could not read memory at {console_address}")
+        raise RuntimeError(f"Could not read memory at {console_address}: {}", DolphinAccessor.getLastErrorMessage())
 
 
 def read_byte(console_address: int) -> int:
@@ -191,14 +194,14 @@ def read_double(console_address: int) -> double:
 def read_bytes(console_address: int, size: int) -> bytes:
     memory = bytearray(size)
     if not DolphinAccessor.readFromRAM(dolphinAddrToOffset(console_address, DolphinAccessor.isARAMAccessible()), memory, size, False):
-        raise RuntimeError(f"Could not read memory at {console_address}")
+        raise RuntimeError(f"Could not read memory at {console_address}: {}", DolphinAccessor.getLastErrorMessage())
     return bytes(memory)
 
 
 cdef _write_memory(console_address, char* memory_buffer, int size):
     assert_hooked()
     if not DolphinAccessor.writeToRAM(dolphinAddrToOffset(console_address, DolphinAccessor.isARAMAccessible()), memory_buffer, size, True):
-        raise RuntimeError(f"Could not write memory at {console_address}")
+        raise RuntimeError(f"Could not write memory at {console_address}: {}", DolphinAccessor.getLastErrorMessage())
 
 
 def write_byte(console_address: int, value: int):
@@ -228,4 +231,4 @@ def write_double(console_address: int, value: double):
 def write_bytes(console_address: int, memory: bytes):
     assert_hooked()
     if not DolphinAccessor.writeToRAM(dolphinAddrToOffset(console_address, DolphinAccessor.isARAMAccessible()), memory, len(memory), False):
-        raise RuntimeError(f"Could not write memory at {console_address}")
+        raise RuntimeError(f"Could not write memory at {console_address}: {}", DolphinAccessor.getLastErrorMessage())
