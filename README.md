@@ -6,7 +6,7 @@ Binary wheels are available on pypi for Python 3.8 to 3.12. Use `python -m pip i
 
 
 ## System requirements
-Any x86_64 based system should work, however, Mac OS is _not_ supported. Additionally, 32-bit x86 based systems are unsupported since Dolphin dropped their support.
+Any x86_64 based system should work. To run on macOS (ARM and x86_64), a custom code signature is required. Instructions can be found on the Dolphin Memory Engine repository [here](https://github.com/aldelaro5/dolphin-memory-engine#macos-code-signing). Additionally, 32-bit x86 based systems are unsupported since Dolphin dropped their support.
 
 You need to have Dolphin running ***and*** _have the emulation started_ for this program to be useful. As such, the system must meet Dolphin's [system requirements](https://github.com/dolphin-emu/dolphin#system-requirements). Additionally, at least 250 MB of free memory is required.
 

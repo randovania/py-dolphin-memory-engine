@@ -57,3 +57,12 @@ venv.bak/
 
 # Project
 /python_src/dolphin_memory_engine/version.py
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
