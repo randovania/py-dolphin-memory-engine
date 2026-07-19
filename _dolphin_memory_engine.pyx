@@ -2,6 +2,7 @@ from typing import List
 from libc.stdint cimport uint8_t, uint32_t, uint64_t
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
+from libcpp.vector cimport vector
 
 
 cdef extern from "Common/MemoryCommon.h" namespace "Common::MemType":
@@ -47,6 +48,9 @@ cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm":
         void hook()
 
         @staticmethod
+        void hook(int)
+
+        @staticmethod
         void unHook()
 
         @staticmethod
@@ -57,6 +61,12 @@ cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm":
 
         @staticmethod
         int getPID()
+
+        @staticmethod
+        vector[int] getProcessIDs(string)
+
+        @staticmethod
+        int getProcessIDByGameID(string, string)
 
         @staticmethod
         DolphinStatus getStatus()
@@ -121,6 +131,12 @@ def hook():
     return DolphinAccessor.hook()
 
 
+def hook(pid=None):
+    if pid is None:
+        return DolphinAccessor.hook()
+    return DolphinAccessor.hook(pid)
+
+
 def un_hook():
     return DolphinAccessor.unHook()
 
@@ -130,6 +146,47 @@ def is_hooked() -> bool:
         return True
     else:
         return False
+
+
+def get_process_ids(dolphin_name: str = "") -> list:
+    """
+    Get all process IDs of running Dolphin instances.
+    If dolphin_name is specified, it dynamically filters by that process name.
+    """
+    return DolphinAccessor.getProcessIDs(dolphin_name.encode("utf-8"))
+
+
+def get_process_id_by_game_id(game_id: str, dolphin_name: str = "") -> int:
+    """
+    Find the process ID of the running Dolphin instance playing the game with the given Game ID.
+    Supports dynamic Game ID lengths and custom process names.
+    Returns None if no matching process is found.
+    """
+    pid = DolphinAccessor.getProcessIDByGameID(game_id.encode("utf-8"), dolphin_name.encode("utf-8"))
+    return pid if pid != -1 else None
+
+
+def get_game_id(length: int = 6) -> str:
+    """
+    Get the Game ID of the currently hooked Dolphin instance.
+    Supports custom length to support extended IDs from mods.
+    """
+    assert_hooked()
+    # Read the specified number of bytes from the start of MEM1 (0x80000000)
+    data = read_bytes(0x80000000, length)
+    return data.decode("ascii", errors="replace")
+
+
+def hook_by_game_id(game_id: str, dolphin_name: str = "") -> bool:
+    """
+    Automatically search for and hook to the Dolphin process playing the specified Game ID.
+    Returns True if successfully hooked, False otherwise.
+    """
+    pid = get_process_id_by_game_id(game_id, dolphin_name)
+    if pid is not None:
+        hook(pid)
+        return True
+    return False
 
 
 def assert_hooked():

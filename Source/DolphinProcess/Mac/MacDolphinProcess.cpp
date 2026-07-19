@@ -43,6 +43,47 @@ bool MacDolphinProcess::findPID()
   return true;
 }
 
+bool MacDolphinProcess::findPID(const int pid)
+{
+  m_PID = pid;
+  return true;
+}
+
+std::vector<int> MacDolphinProcess::getProcessIDs(const std::string& custom_name)
+{
+  std::vector<int> pids;
+  static const int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
+
+  size_t procSize = 0;
+  if (sysctl((int*)mib, 4, NULL, &procSize, NULL, 0) == -1)
+    return pids;
+
+  auto procs = std::make_unique<kinfo_proc[]>(procSize / sizeof(kinfo_proc));
+  if (sysctl((int*)mib, 4, procs.get(), &procSize, NULL, 0) == -1)
+    return pids;
+
+  for (int i = 0; i < procSize / sizeof(kinfo_proc); i++)
+  {
+    const std::string_view name{procs[i].kp_proc.p_comm};
+    bool match = false;
+    if (!custom_name.empty())
+    {
+      match = (name == custom_name);
+    }
+    else
+    {
+      static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
+      match = s_dolphinProcessName ? name == s_dolphinProcessName :
+                                     (name == "Dolphin" || name == "dolphin-emu");
+    }
+    if (match)
+    {
+      pids.push_back(procs[i].kp_proc.p_pid);
+    }
+  }
+  return pids;
+}
+
 bool MacDolphinProcess::obtainEmuRAMInformations()
 {
   m_currentTask = current_task();
