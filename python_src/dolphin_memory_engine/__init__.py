@@ -2,8 +2,12 @@ from dolphin_memory_engine._dolphin_memory_engine import (
     MemWatch,
     assert_hooked,
     follow_pointers,
+    get_game_id,
+    get_process_id_by_game_id,
+    get_process_ids,
     get_status,
     hook,
+    hook_by_game_id,
     is_hooked,
     read_byte,
     read_bytes,
@@ -16,10 +20,6 @@ from dolphin_memory_engine._dolphin_memory_engine import (
     write_double,
     write_float,
     write_word,
-    get_process_ids,
-    get_process_id_by_game_id,
-    get_game_id,
-    hook_by_game_id,
 )
 
 __all__ = [
