@@ -13,6 +13,8 @@ class WindowsDolphinProcess : public IDolphinProcess
 public:
   WindowsDolphinProcess() {}
   bool findPID() override;
+  bool findPID(const int pid) override;
+  std::vector<int> getProcessIDs(const std::string& custom_name) override;
   bool obtainEmuRAMInformations() override;
   bool readFromRAM(const u32 offset, char* buffer, const size_t size,
                    const bool withBSwap) override;

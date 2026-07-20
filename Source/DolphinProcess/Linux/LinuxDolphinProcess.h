@@ -15,6 +15,8 @@ class LinuxDolphinProcess : public IDolphinProcess
 public:
   LinuxDolphinProcess() {}
   bool findPID() override;
+  bool findPID(const int pid) override;
+  std::vector<int> getProcessIDs(const std::string& custom_name) override;
   bool obtainEmuRAMInformations() override;
   bool readFromRAM(const u32 offset, char* buffer, size_t size, const bool withBSwap) override;
   bool writeToRAM(const u32 offset, const char* buffer, const size_t size,

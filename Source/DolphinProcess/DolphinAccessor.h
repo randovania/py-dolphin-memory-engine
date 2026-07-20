@@ -21,11 +21,14 @@ public:
   static void init();
   static void free();
   static void hook();
+  static void hook(const int pid);
   static void unHook();
   static bool readFromRAM(const u32 offset, char* buffer, const size_t size, const bool withBSwap);
   static bool writeToRAM(const u32 offset, const char* buffer, const size_t size,
                          const bool withBSwap);
   static int getPID();
+  static std::vector<int> getProcessIDs(const std::string& custom_name = "");
+  static int getProcessIDByGameID(const std::string& game_id, const std::string& custom_name = "");
   static u64 getEmuRAMAddressStart();
   static DolphinStatus getStatus();
   static std::string getLastErrorMessage();
