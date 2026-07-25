@@ -38,27 +38,10 @@ void DolphinAccessor::free()
   delete m_instance;
 }
 
-void DolphinAccessor::hook()
-{
-  init();
-  if (!m_instance->findPID())
-  {
-    m_status = DolphinStatus::notRunning;
-  }
-  else if (!m_instance->obtainEmuRAMInformations())
-  {
-    m_status = DolphinStatus::noEmu;
-  }
-  else
-  {
-    m_status = DolphinStatus::hooked;
-  }
-}
-
 void DolphinAccessor::hook(const int pid)
 {
   init();
-  if (!m_instance->findPID(pid))
+  if (!m_instance->setPID(pid))
   {
     m_status = DolphinStatus::notRunning;
   }
@@ -79,57 +62,10 @@ void DolphinAccessor::unHook()
   m_status = DolphinStatus::unHooked;
 }
 
-std::vector<int> DolphinAccessor::getProcessIDs(const std::string& custom_name)
+std::vector<int> DolphinAccessor::getProcessIDs(const std::vector<std::string>& names)
 {
   init();
-  return m_instance ? m_instance->getProcessIDs(custom_name) : std::vector<int>();
-}
-
-int DolphinAccessor::getProcessIDByGameID(const std::string& game_id, const std::string& custom_name)
-{
-  init();
-  if (!m_instance)
-    return -1;
-
-  std::vector<int> pids = m_instance->getProcessIDs(custom_name);
-  size_t length = game_id.length();
-  if (length == 0)
-    return -1;
-
-  for (int pid : pids)
-  {
-    IDolphinProcess* tempProcess = nullptr;
-#ifdef __linux__
-    tempProcess = new LinuxDolphinProcess();
-#elif _WIN32
-    tempProcess = new WindowsDolphinProcess();
-#elif __APPLE__
-    tempProcess = new MacDolphinProcess();
-#endif
-
-    if (tempProcess)
-    {
-      if (tempProcess->findPID(pid))
-      {
-        if (tempProcess->obtainEmuRAMInformations())
-        {
-          std::unique_ptr<char[]> gameIdBuffer(new char[length]);
-          u32 offset = Common::dolphinAddrToOffset(Common::MEM1_START, tempProcess->isARAMAccessible());
-          if (tempProcess->readFromRAM(offset, gameIdBuffer.get(), length, false))
-          {
-            std::string readGameId(gameIdBuffer.get(), length);
-            if (readGameId == game_id)
-            {
-              delete tempProcess;
-              return pid;
-            }
-          }
-        }
-      }
-      delete tempProcess;
-    }
-  }
-  return -1;
+  return m_instance ? m_instance->getProcessIDs(names) : std::vector<int>();
 }
 
 DolphinAccessor::DolphinStatus DolphinAccessor::getStatus()
@@ -146,6 +82,27 @@ bool DolphinAccessor::readFromRAM(const u32 offset, char* buffer, const size_t s
                                   const bool withBSwap)
 {
   return m_instance ? m_instance->readFromRAM(offset, buffer, size, withBSwap) : false;
+}
+
+bool DolphinAccessor::readFromRAM(const int pid, const u32 offset, char* buffer, const size_t size,
+                                  const bool withBSwap)
+{
+  IDolphinProcess* tempProcess = nullptr;
+#ifdef __linux__
+  tempProcess = new LinuxDolphinProcess();
+#elif _WIN32
+  tempProcess = new WindowsDolphinProcess();
+#elif __APPLE__
+  tempProcess = new MacDolphinProcess();
+#endif
+
+  if (!tempProcess)
+    return false;
+
+  bool result = tempProcess->setPID(pid) && tempProcess->obtainEmuRAMInformations() &&
+                tempProcess->readFromRAM(offset, buffer, size, withBSwap);
+  delete tempProcess;
+  return result;
 }
 
 bool DolphinAccessor::writeToRAM(const u32 offset, const char* buffer, const size_t size,

@@ -1,8 +1,24 @@
-from typing import List
+import os
+import sys
+from typing import List, Optional
 from libc.stdint cimport uint8_t, uint32_t, uint64_t
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+
+
+_DEFAULT_DOLPHIN_NAMES = {
+    "win32": ["Dolphin.exe", "DolphinQt2.exe", "DolphinWx.exe"],
+    "linux": ["dolphin-emu", "dolphin-emu-qt2", "dolphin-emu-wx"],
+    "darwin": ["Dolphin", "dolphin-emu"],
+}
+
+
+def _default_dolphin_names() -> List[str]:
+    env_name = os.environ.get("DME_DOLPHIN_PROCESS_NAME")
+    if env_name:
+        return [env_name]
+    return _DEFAULT_DOLPHIN_NAMES.get(sys.platform, [])
 
 
 cdef extern from "Common/MemoryCommon.h" namespace "Common::MemType":
@@ -45,9 +61,6 @@ cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm":
         void free()
 
         @staticmethod
-        void hook()
-
-        @staticmethod
         void hook(int)
 
         @staticmethod
@@ -55,6 +68,9 @@ cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm":
 
         @staticmethod
         c_bool readFromRAM(uint32_t, char*, const size_t, c_bool)
+
+        @staticmethod
+        c_bool readFromRAM(int, uint32_t, char*, const size_t, c_bool)
         
         @staticmethod
         c_bool writeToRAM(uint32_t, const char*, const size_t, c_bool)
@@ -63,10 +79,7 @@ cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm":
         int getPID()
 
         @staticmethod
-        vector[int] getProcessIDs(string)
-
-        @staticmethod
-        int getProcessIDByGameID(string, string)
+        vector[int] getProcessIDs(vector[string])
 
         @staticmethod
         DolphinStatus getStatus()
@@ -127,13 +140,10 @@ cdef class MemWatch:
         return self.c_entry.writeMemoryFromString(value.encode("utf-8")) == MemOperationReturnCode.OK
 
 
-def hook():
-    return DolphinAccessor.hook()
-
-
-def hook(pid=None):
+def hook(pid: Optional[int] = None):
     if pid is None:
-        return DolphinAccessor.hook()
+        pids = get_process_ids()
+        pid = pids[0] if pids else -1
     return DolphinAccessor.hook(pid)
 
 
@@ -148,22 +158,42 @@ def is_hooked() -> bool:
         return False
 
 
-def get_process_ids(dolphin_name: str = "") -> list:
+def get_process_ids(dolphin_names: Optional[List[str]] = None) -> list:
     """
     Get all process IDs of running Dolphin instances.
-    If dolphin_name is specified, it dynamically filters by that process name.
+    If dolphin_names is omitted, resolves DME_DOLPHIN_PROCESS_NAME or the platform's default names.
     """
-    return DolphinAccessor.getProcessIDs(dolphin_name.encode("utf-8"))
+    if dolphin_names is None:
+        dolphin_names = _default_dolphin_names()
+    return DolphinAccessor.getProcessIDs([name.encode("utf-8") for name in dolphin_names])
 
 
-def get_process_id_by_game_id(game_id: str, dolphin_name: str = "") -> int:
+def read_bytes_from_process(pid: int, length: int) -> bytes:
+    """
+    Read `length` bytes from the start of MEM1 (0x80000000) of a running, unhooked Dolphin process.
+    """
+    memory = bytearray(length)
+    offset = dolphinAddrToOffset(0x80000000, False)
+    if not DolphinAccessor.readFromRAM(pid, offset, memory, length, False):
+        raise RuntimeError(f"Could not read memory from process {pid}")
+    return bytes(memory)
+
+
+def get_process_id_by_game_id(game_id: str, dolphin_names: Optional[List[str]] = None) -> int:
     """
     Find the process ID of the running Dolphin instance playing the game with the given Game ID.
     Supports dynamic Game ID lengths and custom process names.
     Returns None if no matching process is found.
     """
-    pid = DolphinAccessor.getProcessIDByGameID(game_id.encode("utf-8"), dolphin_name.encode("utf-8"))
-    return pid if pid != -1 else None
+    length = len(game_id)
+    for pid in get_process_ids(dolphin_names):
+        try:
+            data = read_bytes_from_process(pid, length)
+        except RuntimeError:
+            continue
+        if data.decode("ascii", errors="replace") == game_id:
+            return pid
+    return None
 
 
 def get_game_id(length: int = 6) -> str:

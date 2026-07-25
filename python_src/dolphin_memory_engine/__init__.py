@@ -20,6 +20,7 @@ from dolphin_memory_engine._dolphin_memory_engine import (
     get_process_id_by_game_id,
     get_game_id,
     hook_by_game_id,
+    read_bytes_from_process,
 )
 
 __all__ = [
@@ -44,4 +45,5 @@ __all__ = [
     "get_process_id_by_game_id",
     "get_game_id",
     "hook_by_game_id",
+    "read_bytes_from_process",
 ]

@@ -12,44 +12,13 @@
 
 namespace DolphinComm
 {
-bool MacDolphinProcess::findPID()
-{
-  static const int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
-
-  size_t procSize = 0;
-  if (sysctl((int*)mib, 4, NULL, &procSize, NULL, 0) == -1)
-    return false;
-
-  auto procs = std::make_unique<kinfo_proc[]>(procSize / sizeof(kinfo_proc));
-  if (sysctl((int*)mib, 4, procs.get(), &procSize, NULL, 0) == -1)
-    return false;
-
-  static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
-
-  m_PID = -1;
-  for (int i = 0; i < procSize / sizeof(kinfo_proc); i++)
-  {
-    const std::string_view name{procs[i].kp_proc.p_comm};
-    const bool match{s_dolphinProcessName ? name == s_dolphinProcessName :
-                                            (name == "Dolphin" || name == "dolphin-emu")};
-    if (match)
-    {
-      m_PID = procs[i].kp_proc.p_pid;
-    }
-  }
-
-  if (m_PID == -1)
-    return false;
-  return true;
-}
-
-bool MacDolphinProcess::findPID(const int pid)
+bool MacDolphinProcess::setPID(const int pid)
 {
   m_PID = pid;
   return true;
 }
 
-std::vector<int> MacDolphinProcess::getProcessIDs(const std::string& custom_name)
+std::vector<int> MacDolphinProcess::getProcessIDs(const std::vector<std::string>& names)
 {
   std::vector<int> pids;
   static const int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
@@ -65,20 +34,13 @@ std::vector<int> MacDolphinProcess::getProcessIDs(const std::string& custom_name
   for (int i = 0; i < procSize / sizeof(kinfo_proc); i++)
   {
     const std::string_view name{procs[i].kp_proc.p_comm};
-    bool match = false;
-    if (!custom_name.empty())
+    for (const auto& candidate : names)
     {
-      match = (name == custom_name);
-    }
-    else
-    {
-      static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
-      match = s_dolphinProcessName ? name == s_dolphinProcessName :
-                                     (name == "Dolphin" || name == "dolphin-emu");
-    }
-    if (match)
-    {
-      pids.push_back(procs[i].kp_proc.p_pid);
+      if (name == candidate)
+      {
+        pids.push_back(procs[i].kp_proc.p_pid);
+        break;
+      }
     }
   }
   return pids;

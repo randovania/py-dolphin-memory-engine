@@ -102,50 +102,13 @@ bool LinuxDolphinProcess::obtainEmuRAMInformations()
   return false;
 }
 
-bool LinuxDolphinProcess::findPID()
-{
-  DIR* directoryPointer = opendir("/proc/");
-  if (directoryPointer == nullptr)
-    return false;
-
-  static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
-
-  m_PID = -1;
-  struct dirent* directoryEntry = nullptr;
-  while (m_PID == -1 && (directoryEntry = readdir(directoryPointer)))
-  {
-    std::istringstream conversionStream(directoryEntry->d_name);
-    int aPID = 0;
-    if (!(conversionStream >> aPID))
-      continue;
-    std::ifstream aCmdLineFile;
-    std::string line;
-    aCmdLineFile.open("/proc/" + std::string(directoryEntry->d_name) + "/comm");
-    getline(aCmdLineFile, line);
-
-    const bool match{s_dolphinProcessName ? line == s_dolphinProcessName :
-                                            (line == "dolphin-emu" || line == "dolphin-emu-qt2" ||
-                                             line == "dolphin-emu-wx")};
-    if (match)
-      m_PID = aPID;
-
-    aCmdLineFile.close();
-  }
-  closedir(directoryPointer);
-
-  if (m_PID == -1)
-    // Here, Dolphin apparently isn't running on the system
-    return false;
-  return true;
-}
-
-bool MacDolphinProcess::findPID(const int pid)
+bool LinuxDolphinProcess::setPID(const int pid)
 {
   m_PID = pid;
   return true;
 }
 
-std::vector<int> LinuxDolphinProcess::getProcessIDs(const std::string& custom_name)
+std::vector<int> LinuxDolphinProcess::getProcessIDs(const std::vector<std::string>& names)
 {
   std::vector<int> pids;
   DIR* directoryPointer = opendir("/proc/");
@@ -164,21 +127,13 @@ std::vector<int> LinuxDolphinProcess::getProcessIDs(const std::string& custom_na
     aCmdLineFile.open("/proc/" + std::string(directoryEntry->d_name) + "/comm");
     getline(aCmdLineFile, line);
 
-    bool match = false;
-    if (!custom_name.empty())
+    for (const auto& name : names)
     {
-      match = (line == custom_name);
-    }
-    else
-    {
-      static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
-      match = s_dolphinProcessName ? line == s_dolphinProcessName :
-                                     (line == "dolphin-emu" || line == "dolphin-emu-qt2" ||
-                                      line == "dolphin-emu-wx");
-    }
-    if (match)
-    {
-      pids.push_back(aPID);
+      if (line == name)
+      {
+        pids.push_back(aPID);
+        break;
+      }
     }
 
     aCmdLineFile.close();

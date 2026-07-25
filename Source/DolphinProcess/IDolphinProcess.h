@@ -13,9 +13,8 @@ class IDolphinProcess
 {
 public:
   virtual ~IDolphinProcess() {}
-  virtual bool findPID() = 0;
-  virtual bool findPID(const int pid) = 0;
-  virtual std::vector<int> getProcessIDs(const std::string& custom_name) = 0;
+  virtual bool setPID(const int pid) = 0;
+  virtual std::vector<int> getProcessIDs(const std::vector<std::string>& names) = 0;
   virtual bool obtainEmuRAMInformations() = 0;
   virtual bool readFromRAM(const u32 offset, char* buffer, const size_t size,
                            const bool withBSwap) = 0;

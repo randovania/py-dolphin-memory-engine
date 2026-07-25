@@ -26,70 +26,22 @@ std::wstring utf8_to_wstring(const std::string& str)
 namespace DolphinComm
 {
 
-bool WindowsDolphinProcess::findPID()
+bool WindowsDolphinProcess::setPID(const int pid)
 {
-  PROCESSENTRY32 entry;
-  entry.dwSize = sizeof(PROCESSENTRY32);
-
-  static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
-
-  HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
-
-  m_PID = -1;
-  if (Process32First(snapshot, &entry) == TRUE)
-  {
-    do
-    {
-#ifdef UNICODE
-      const std::wstring exeFile{entry.szExeFile};
-      const bool match{s_dolphinProcessName ?
-                           (exeFile == utf8_to_wstring(s_dolphinProcessName) ||
-                            exeFile == utf8_to_wstring(s_dolphinProcessName) + L".exe") :
-                           (exeFile == L"Dolphin.exe" || exeFile == L"DolphinQt2.exe" ||
-                            exeFile == L"DolphinWx.exe")};
-#else
-      const std::string exeFile{entry.szExeFile};
-      const bool match{s_dolphinProcessName ?
-                           (exeFile == s_dolphinProcessName ||
-                            exeFile == std::string(s_dolphinProcessName) + ".exe") :
-                           (exeFile == "Dolphin.exe" || exeFile == "DolphinQt2.exe" ||
-                            exeFile == "DolphinWx.exe")};
-#endif
-      if (match)
-      {
-        m_PID = entry.th32ProcessID;
-        break;
-      }
-    } while (Process32Next(snapshot, &entry) == TRUE);
-  }
-
-  CloseHandle(snapshot);
-  if (m_PID == -1)
-    // Here, Dolphin doesn't appear to be running on the system
-    return false;
+  m_PID = pid;
 
   // Get the handle if Dolphin is running since it's required on Windows to read or write into the
   // RAM of the process and to query the RAM mapping information
   m_hDolphin = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_READ |
-                               PROCESS_VM_WRITE,
-                           FALSE, m_PID);
-  return true;
-}
+      PROCESS_VM_WRITE, FALSE, m_PID);
 
-bool WindowsDolphinProcess::findPID(const int pid)
-{
-  m_PID = pid;
-
-  m_hDolphin = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_READ |
-                               PROCESS_VM_WRITE,
-                           FALSE, m_PID);
   if (m_hDolphin == NULL)
     return false;
-
+  
   return true;
 }
 
-std::vector<int> WindowsDolphinProcess::getProcessIDs(const std::string& custom_name)
+std::vector<int> WindowsDolphinProcess::getProcessIDs(const std::vector<std::string>& names)
 {
   std::vector<int> pids;
   PROCESSENTRY32 entry;
@@ -104,36 +56,25 @@ std::vector<int> WindowsDolphinProcess::getProcessIDs(const std::string& custom_
 #ifdef UNICODE
       const std::wstring exeFile{entry.szExeFile};
       bool match = false;
-      if (!custom_name.empty())
+      for (const auto& name : names)
       {
-        match = (exeFile == utf8_to_wstring(custom_name) ||
-                 exeFile == utf8_to_wstring(custom_name) + L".exe");
-      }
-      else
-      {
-        static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
-        match = s_dolphinProcessName ?
-                     (exeFile == utf8_to_wstring(s_dolphinProcessName) ||
-                      exeFile == utf8_to_wstring(s_dolphinProcessName) + L".exe") :
-                     (exeFile == L"Dolphin.exe" || exeFile == L"DolphinQt2.exe" ||
-                      exeFile == L"DolphinWx.exe");
+        const std::wstring wname = utf8_to_wstring(name);
+        if (exeFile == wname || exeFile == wname + L".exe")
+        {
+          match = true;
+          break;
+        }
       }
 #else
       const std::string exeFile{entry.szExeFile};
       bool match = false;
-      if (!custom_name.empty())
+      for (const auto& name : names)
       {
-        match = (exeFile == custom_name ||
-                 exeFile == custom_name + ".exe");
-      }
-      else
-      {
-        static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
-        match = s_dolphinProcessName ?
-                     (exeFile == s_dolphinProcessName ||
-                      exeFile == std::string(s_dolphinProcessName) + ".exe") :
-                     (exeFile == "Dolphin.exe" || exeFile == "DolphinQt2.exe" ||
-                      exeFile == "DolphinWx.exe");
+        if (exeFile == name || exeFile == name + ".exe")
+        {
+          match = true;
+          break;
+        }
       }
 #endif
       if (match)
