@@ -1,5 +1,6 @@
 from dolphin_memory_engine._dolphin_memory_engine import (
     MemWatch,
+    DolphinStatus,
     assert_hooked,
     follow_pointers,
     get_game_id,
@@ -25,6 +26,7 @@ from dolphin_memory_engine._dolphin_memory_engine import (
 
 __all__ = [
     "MemWatch",
+    "DolphinStatus",
     "assert_hooked",
     "follow_pointers",
     "hook",
