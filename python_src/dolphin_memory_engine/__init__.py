@@ -1,6 +1,6 @@
 from dolphin_memory_engine._dolphin_memory_engine import (
-    MemWatch,
     DolphinStatus,
+    MemWatch,
     assert_hooked,
     follow_pointers,
     get_game_id,
