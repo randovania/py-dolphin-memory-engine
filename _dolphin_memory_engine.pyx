@@ -158,7 +158,7 @@ def is_hooked() -> bool:
         return False
 
 
-def get_process_ids(dolphin_names: Optional[List[str]] = None) -> list:
+def get_process_ids(dolphin_names: Optional[List[str]] = None) -> list[int]:
     """
     Get all process IDs of running Dolphin instances.
     If dolphin_names is omitted, resolves DME_DOLPHIN_PROCESS_NAME or the platform's default names.
@@ -168,12 +168,13 @@ def get_process_ids(dolphin_names: Optional[List[str]] = None) -> list:
     return DolphinAccessor.getProcessIDs([name.encode("utf-8") for name in dolphin_names])
 
 
-def read_bytes_from_process(pid: int, length: int) -> bytes:
+def read_bytes_from_process(pid: int, length: int, offset: int = 0x80000000) -> bytes:
     """
-    Read `length` bytes from the start of MEM1 (0x80000000) of a running, unhooked Dolphin process.
+    Read `length` bytes from an `offset` within MEM1 of a running, unhooked Dolphin process.
+        Default offset to `0x80000000`.
     """
     memory = bytearray(length)
-    offset = dolphinAddrToOffset(0x80000000, False)
+    offset = dolphinAddrToOffset(offset, False)
     if not DolphinAccessor.readFromRAM(pid, offset, memory, length, False):
         raise RuntimeError(f"Could not read memory from process {pid}")
     return bytes(memory)
