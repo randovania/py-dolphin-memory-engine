@@ -152,7 +152,7 @@ def un_hook():
 
 
 def is_hooked() -> bool:
-    if DolphinAccessor.getStatus() == DolphinStatus.hooked:
+    if DolphinAccessor.getStatus() == DolphinStatus.HOOKED:
         return True
     else:
         return False
