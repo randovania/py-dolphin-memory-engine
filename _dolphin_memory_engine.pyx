@@ -46,10 +46,10 @@ cdef extern from "Common/CommonUtils.h" namespace "Common":
 
 cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm::DolphinAccessor":
     cpdef enum class DolphinStatus:
-        hooked
-        notRunning
-        noEmu
-        unHooked
+        HOOKED
+        EMULATION_NOT_STARTED
+        NOT_FOUND
+        UNHOOKED
 
 
 cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm":
