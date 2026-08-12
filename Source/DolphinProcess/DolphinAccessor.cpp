@@ -16,7 +16,7 @@
 namespace DolphinComm
 {
 IDolphinProcess* DolphinAccessor::m_instance = nullptr;
-DolphinAccessor::DolphinStatus DolphinAccessor::m_status = DolphinStatus::unHooked;
+DolphinAccessor::DolphinStatus DolphinAccessor::m_status = DolphinStatus::UNHOOKED;
 
 void DolphinAccessor::init()
 {
@@ -43,15 +43,15 @@ void DolphinAccessor::hook(const int pid)
   init();
   if (!m_instance->setPID(pid))
   {
-    m_status = DolphinStatus::notRunning;
+    m_status = DolphinStatus::NOT_FOUND;
   }
   else if (!m_instance->obtainEmuRAMInformations())
   {
-    m_status = DolphinStatus::noEmu;
+    m_status = DolphinStatus::EMULATION_NOT_STARTED;
   }
   else
   {
-    m_status = DolphinStatus::hooked;
+    m_status = DolphinStatus::HOOKED;
   }
 }
 
@@ -59,7 +59,7 @@ void DolphinAccessor::unHook()
 {
   delete m_instance;
   m_instance = nullptr;
-  m_status = DolphinStatus::unHooked;
+  m_status = DolphinStatus::UNHOOKED;
 }
 
 std::vector<int> DolphinAccessor::getProcessIDs(const std::vector<std::string>& names)
@@ -138,7 +138,7 @@ bool DolphinAccessor::isMEM2Present()
 
 bool DolphinAccessor::isValidConsoleAddress(const u32 address)
 {
-  if (getStatus() != DolphinStatus::hooked)
+  if (getStatus() != DolphinStatus::HOOKED)
     return false;
 
   if (address >= Common::MEM1_START && address < Common::GetMEM1End())

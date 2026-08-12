@@ -12,10 +12,10 @@ class DolphinAccessor
 public:
   enum class DolphinStatus
   {
-    hooked,
-    notRunning,
-    noEmu,
-    unHooked
+    HOOKED,
+    NOT_FOUND,
+    EMULATION_NOT_STARTED,
+    UNHOOKED
   };
 
   static void init();
