@@ -1,5 +1,7 @@
 from typing import List, Optional
+
 from . import assert_hooked, get_process_ids, hook, read_bytes, read_bytes_from_process
+
 
 def get_process_id_by_game_id(game_id: str, dolphin_names: Optional[List[str]] = None) -> int:
     """
