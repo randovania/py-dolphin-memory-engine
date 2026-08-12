@@ -1,4 +1,5 @@
 import dolphin_memory_engine
+from dolphin_memory_engine import game_id
 
 
 def test_is_hooked_default():
@@ -20,6 +21,6 @@ def test_get_process_ids():
 
 
 def test_get_process_id_by_game_id_not_found():
-    # Verify that searching for a non-existent game ID returns None
-    pid = dolphin_memory_engine.get_process_id_by_game_id("NONEXIST")
-    assert pid is None
+    # Verify that searching for a non-existent game ID returns an empty list
+    pid = game_id.get_process_id_by_game_id("NONEXIST")
+    assert pid == []
