@@ -16,7 +16,7 @@
 namespace DolphinComm
 {
 IDolphinProcess* DolphinAccessor::m_instance = nullptr;
-DolphinAccessor::DolphinStatus DolphinAccessor::m_status = DolphinStatus::UNHOOKED;
+DolphinStatus DolphinAccessor::m_status = DolphinStatus::UNHOOKED;
 
 void DolphinAccessor::init()
 {
@@ -68,7 +68,7 @@ std::vector<int> DolphinAccessor::getProcessIDs(const std::vector<std::string>& 
   return m_instance ? m_instance->getProcessIDs(names) : std::vector<int>();
 }
 
-DolphinAccessor::DolphinStatus DolphinAccessor::getStatus()
+DolphinStatus DolphinAccessor::getStatus()
 {
   return m_status;
 }

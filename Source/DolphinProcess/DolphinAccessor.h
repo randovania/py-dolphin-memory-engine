@@ -4,20 +4,13 @@
 #include "../Common/CommonTypes.h"
 #include "../Common/MemoryCommon.h"
 #include "IDolphinProcess.h"
+#include "DolphinStatus.h"
 
 namespace DolphinComm
 {
 class DolphinAccessor
 {
 public:
-  enum class DolphinStatus
-  {
-    HOOKED,
-    NOT_FOUND,
-    EMULATION_NOT_STARTED,
-    UNHOOKED
-  };
-
   static void init();
   static void free();
   static void hook(const int pid);

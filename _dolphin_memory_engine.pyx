@@ -44,7 +44,7 @@ cdef extern from "Common/CommonUtils.h" namespace "Common":
     uint32_t offsetToDolphinAddr(uint32_t, c_bool)
 
 
-cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm::DolphinAccessor":
+cdef extern from "DolphinProcess/DolphinStatus.h" namespace "DolphinComm":
     cpdef enum class DolphinStatus:
         HOOKED
         EMULATION_NOT_STARTED
