@@ -23,7 +23,7 @@ def get_process_ids_by_game_id(game_id: str, dolphin_names: Optional[List[str]] 
     """
     Finds the process ID of the running Dolphin instance playing the game with the given Game ID.
     Supports dynamic Game ID lengths and custom process names.
-    Returns the first matching PID, or None if no matching process is found.
+    Returns a list of matching PIDs, or and empty list if no matching process is found.
     """
     matched_pids: List[int] = []
     for pid in get_process_ids(dolphin_names):
@@ -47,8 +47,8 @@ def hook_by_game_id(game_id: str, dolphin_names: Optional[List[str]] = None) -> 
     Automatically search for and hook to the Dolphin process playing the specified Game ID.
     Returns True if successfully hooked, False otherwise.
     """
-    pid = get_process_ids_by_game_id(game_id, dolphin_names)
-    if pid is not None:
-        hook(pid[0])
+    pids = get_process_ids_by_game_id(game_id, dolphin_names)
+    if pids:
+        hook(pids[0])
         return True
     return False
