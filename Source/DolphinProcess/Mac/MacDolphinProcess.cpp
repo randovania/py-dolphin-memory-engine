@@ -14,6 +14,9 @@ namespace DolphinComm
 {
 bool MacDolphinProcess::setPID(const int pid)
 {
+  if (pid <= 0)
+    return false;
+
   m_PID = pid;
   return true;
 }
@@ -21,6 +24,9 @@ bool MacDolphinProcess::setPID(const int pid)
 std::vector<int> MacDolphinProcess::getProcessIDs(const std::vector<std::string>& names)
 {
   std::vector<int> pids;
+  if (names.empty())
+    return pids;
+
   static const int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
 
   size_t procSize = 0;
@@ -48,6 +54,12 @@ std::vector<int> MacDolphinProcess::getProcessIDs(const std::vector<std::string>
 
 bool MacDolphinProcess::obtainEmuRAMInformations()
 {
+  m_emuRAMAddressStart = 0;
+  m_emuARAMAdressStart = 0;
+  m_MEM2AddressStart = 0;
+  m_MEM2Present = false;
+  m_ARAMAccessible = false;
+
   m_currentTask = current_task();
   kern_return_t error = task_for_pid(m_currentTask, m_PID, &m_task);
   if (error != KERN_SUCCESS)

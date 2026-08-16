@@ -19,6 +19,12 @@ namespace DolphinComm
 {
 bool LinuxDolphinProcess::obtainEmuRAMInformations()
 {
+  m_emuRAMAddressStart = 0;
+  m_emuARAMAdressStart = 0;
+  m_MEM2AddressStart = 0;
+  m_MEM2Present = false;
+  m_ARAMAccessible = false;
+
   std::ifstream theMapsFile("/proc/" + std::to_string(m_PID) + "/maps");
   std::string line;
   bool MEM1Found = false;
@@ -104,6 +110,9 @@ bool LinuxDolphinProcess::obtainEmuRAMInformations()
 
 bool LinuxDolphinProcess::setPID(const int pid)
 {
+  if (pid <=0)
+    return false;
+
   m_PID = pid;
   return true;
 }
@@ -111,6 +120,9 @@ bool LinuxDolphinProcess::setPID(const int pid)
 std::vector<int> LinuxDolphinProcess::getProcessIDs(const std::vector<std::string>& names)
 {
   std::vector<int> pids;
+  if (names.empty())
+    return pids;
+
   DIR* directoryPointer = opendir("/proc/");
   if (directoryPointer == nullptr)
     return pids;

@@ -26,8 +26,30 @@ std::wstring utf8_to_wstring(const std::string& str)
 namespace DolphinComm
 {
 
+  WindowsDolphinProcess::WindowsDolphinProcess() : m_hDolphin(NULL)
+  {
+  }
+
+  WindowsDolphinProcess::~WindowsDolphinProcess()
+  {
+    if (m_hDolphin != NULL)
+    {
+      CloseHandle(m_hDolphin);
+      m_hDolphin = NULL;
+    }
+  }
+
 bool WindowsDolphinProcess::setPID(const int pid)
 {
+  if (m_hDolphin != NULL)
+  {
+    CloseHandle(m_hDolphin);
+    m_hDolphin = NULL;
+  }
+
+  if (pid <= 0)
+    return false;
+
   m_PID = pid;
 
   // Get the handle if Dolphin is running since it's required on Windows to read or write into the
@@ -44,10 +66,15 @@ bool WindowsDolphinProcess::setPID(const int pid)
 std::vector<int> WindowsDolphinProcess::getProcessIDs(const std::vector<std::string>& names)
 {
   std::vector<int> pids;
+  if (names.empty())
+    return pids;
+
   PROCESSENTRY32 entry;
   entry.dwSize = sizeof(PROCESSENTRY32);
 
   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+  if (snapshot == INVALID_HANDLE_VALUE)
+    return pids;
 
   if (Process32First(snapshot, &entry) == TRUE)
   {
