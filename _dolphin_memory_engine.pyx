@@ -68,18 +68,12 @@ cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm":
 
         @staticmethod
         c_bool readFromRAM(uint32_t, char*, const size_t, c_bool)
-
-        @staticmethod
-        c_bool readFromRAM(int, uint32_t, char*, const size_t, c_bool)
         
         @staticmethod
         c_bool writeToRAM(uint32_t, const char*, const size_t, c_bool)
 
         @staticmethod
         int getPID()
-
-        @staticmethod
-        vector[int] getProcessIDs(vector[string])
 
         @staticmethod
         DolphinStatus getStatus()
@@ -94,6 +88,24 @@ cdef extern from "DolphinProcess/DolphinAccessor.h" namespace "DolphinComm":
         c_bool isARAMAccessible()
 
 
+cdef extern from "DolphinProcess/DolphinInstance.h" namespace "DolphinComm":
+    vector[int] GetProcessIDs(vector[string])
+
+    cdef cppclass DolphinInstance:
+        void init()
+        void free()
+        void hook(int)
+        void unHook()
+        c_bool readFromRAM(uint32_t, char*, const size_t, c_bool)
+        c_bool writeToRAM(uint32_t, const char*, const size_t, c_bool)
+        int getPID()
+        DolphinStatus getStatus()
+        string getLastErrorMessage()
+        c_bool isARAMAccessible()
+        c_bool isValidConsoleAddress(uint32_t)
+        c_bool isARAMAccessible()
+
+
 cdef extern from "MemoryWatch/MemWatchEntry.h":
     cdef cppclass MemWatchEntry:
         MemWatchEntry()
@@ -102,6 +114,7 @@ cdef extern from "MemoryWatch/MemWatchEntry.h":
         char* getMemory()
 
         void addOffset(int)
+        void setTargetProcess(DolphinInstance*)
         MemOperationReturnCode readMemoryFromRAM()
         MemOperationReturnCode writeMemoryFromString(string)
 
@@ -121,11 +134,134 @@ cdef buffer_to_double(char* buffer):
     return value[0]
 
 
+cdef class DolphinProcess:
+    """
+    An independent, hookable Dolphin process that allows multiple Dolphin
+    instances to be hooked and accessed at the same time.
+    """
+
+    cdef DolphinInstance* _instance
+
+    def __cinit__(self, pid: Optional[int] = None):
+        self._instance = new DolphinInstance()
+        self.hook(pid)
+
+    def __dealloc__(self):
+        if self._instance != NULL:
+            del self._instance
+
+    def hook(self, pid: Optional[int] = None):
+        if pid is None:
+            pids = get_process_ids()
+            pid = pids[0] if pids else -1
+        self._instance.hook(pid)
+    
+    def un_hook(self):
+        self._instance.unHook()
+
+    def is_hooked(self) -> bool:
+        return self.get_status() == DolphinStatus.HOOKED
+
+    def get_status(self) -> DolphinStatus:
+        return self._instance.getStatus()
+
+    def assert_hooked(self):
+        if not self.is_hooked():
+            raise RuntimeError("not hooked")
+
+    def get_pid(self) -> int:
+        return self._instance.getPID()
+    
+    def follow_pointers(self, console_address: int, pointer_offsets: List[int]) -> int:
+        self.assert_hooked()
+        real_console_address = console_address
+
+        is_aram_accessible = self._instance.isARAMAccessible()
+
+        cdef char memory_buffer[4]
+        for offset in pointer_offsets:
+            if self._instance.readFromRAM(dolphinAddrToOffset(real_console_address, is_aram_accessible), memory_buffer, 4, True):
+                real_console_address = buffer_to_word(memory_buffer)
+                if self._instance.isValidConsoleAddress(real_console_address):
+                    real_console_address += offset
+                else:
+                    raise RuntimeError(f"Address {real_console_address} is not valid")
+            else:
+                raise RuntimeError(f"Could not read memory at {real_console_address}: {self._instance.getLastErrorMessage()}")
+
+        return real_console_address
+
+    cdef _read_memory(self, console_address, char* memory_buffer, int size):
+        self.assert_hooked()
+        if not self._instance.readFromRAM(dolphinAddrToOffset(console_address, self._instance.isARAMAccessible()), memory_buffer, size, True):
+            raise RuntimeError(f"Could not read memory at {console_address}: {self._instance.getLastErrorMessage()}")
+
+    def read_byte(self, console_address: int) -> int:
+        cdef char memory_buffer[1]
+        self._read_memory(console_address, memory_buffer, 1)
+        return (<uint8_t*> memory_buffer)[0]
+
+    def read_word(self, console_address: int) -> int:
+        cdef char memory_buffer[4]
+        self._read_memory(console_address, memory_buffer, 4)
+        return (<uint32_t*> memory_buffer)[0]
+    
+    def read_float(self, console_address: int) -> float:
+        cdef char memory_buffer[4]
+        self._read_memory(console_address, memory_buffer, 4)
+        return (<float*> memory_buffer)[0]
+
+    def read_double(self, console_address: int) -> double:
+        cdef char memory_buffer[8]
+        self._read_memory(console_address, memory_buffer, 8)    
+        return (<double*> memory_buffer)[0]
+
+    def read_bytes(self, console_address: int, size: int) -> bytes:
+        memory = bytearray(size)
+        if not self._instance.readFromRAM(dolphinAddrToOffset(console_address, self._instance.isARAMAccessible()), memory, size, False):
+            raise RuntimeError(f"Could not read memory at {console_address}: {self._instance.getLastErrorMessage()}")
+        return bytes(memory)
+
+    cdef _write_memory(self, console_address, char* memory_buffer, int size):
+        self.assert_hooked()
+        if not self._instance.writeToRAM(dolphinAddrToOffset(console_address, self._instance.isARAMAccessible()), memory_buffer, size, True):
+            raise RuntimeError(f"Could not write memory at {console_address}: {self._instance.getLastErrorMessage()}")
+
+    def write_byte(self, console_address: int, value: int):
+        cdef char memory_buffer[1]
+        (<uint8_t*> memory_buffer)[0] = value
+        self._write_memory(console_address, memory_buffer, 1)
+
+    def write_word(self, console_address: int, value: int):
+        cdef char memory_buffer[4]
+        (<uint32_t*> memory_buffer)[0] = value
+        self._write_memory(console_address, memory_buffer, 4)
+
+    def write_float(self, console_address: int, value: float):
+        cdef char memory_buffer[4]
+        (<float*> memory_buffer)[0] = value
+        self._write_memory(console_address, memory_buffer, 4)
+
+    def write_double(self, console_address: int, value: double):
+        cdef char memory_buffer[8]
+        (<double*> memory_buffer)[0] = value
+        self._write_memory(console_address, memory_buffer, 8)
+
+    def write_bytes(self, console_address: int, memory: bytes):
+        self.assert_hooked()
+        if not self._instance.writeToRAM(dolphinAddrToOffset(console_address, self._instance.isARAMAccessible()), memory, len(memory), False):
+            raise RuntimeError(f"Could not write memory at {console_address}: {self._instance.getLastErrorMessage()}")
+
+
 cdef class MemWatch:
     cdef MemWatchEntry c_entry
+    cdef object _dolphin_process
 
-    def __cinit__(self, label: str, console_address: int, is_pointer: bool):
+    def __cinit__(self, label: str, console_address: int, is_pointer: bool, dolphin_process: Optional[DolphinProcess] = None):
         self.c_entry = MemWatchEntry(label.encode("utf-8"), console_address, MemType.type_word, MemBase.base_decimal, False, 1, is_pointer)
+        self._dolphin_process = dolphin_process
+        if dolphin_process:
+            self.c_entry.setTargetProcess((<DolphinProcess> dolphin_process)._instance)
 
     def add_offset(self, offset: int):
         self.c_entry.addOffset(offset)
@@ -165,19 +301,11 @@ def get_process_ids(dolphin_names: Optional[List[str]] = None) -> list[int]:
     """
     if dolphin_names is None:
         dolphin_names = _default_dolphin_names()
-    return DolphinAccessor.getProcessIDs([name.encode("utf-8") for name in dolphin_names])
+    return GetProcessIDs([name.encode("utf-8") for name in dolphin_names])
 
 
-def read_bytes_from_process(pid: int, length: int, offset: int = 0x80000000) -> bytes:
-    """
-    Read `length` bytes from an `offset` within MEM1 of a running, unhooked Dolphin process.
-        Default offset to `0x80000000`.
-    """
-    memory = bytearray(length)
-    offset = dolphinAddrToOffset(offset, False)
-    if not DolphinAccessor.readFromRAM(pid, offset, memory, length, False):
-        raise RuntimeError(f"Could not read memory from process {pid}")
-    return bytes(memory)
+def get_pid() -> int:
+    return DolphinAccessor.getPID();
 
 
 def assert_hooked():

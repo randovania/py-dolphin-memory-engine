@@ -3,6 +3,7 @@
 
 #include "../Common/CommonTypes.h"
 #include "../Common/MemoryCommon.h"
+#include "DolphinInstance.h"
 #include "IDolphinProcess.h"
 #include "DolphinStatus.h"
 
@@ -16,8 +17,6 @@ public:
   static void hook(const int pid);
   static void unHook();
   static bool readFromRAM(const u32 offset, char* buffer, const size_t size, const bool withBSwap);
-  static bool readFromRAM(const int pid, const u32 offset, char* buffer, const size_t size, 
-                         const bool withBSwap);
   static bool writeToRAM(const u32 offset, const char* buffer, const size_t size,
                          const bool withBSwap);
   static int getPID();
@@ -36,7 +35,6 @@ public:
   static bool isValidConsoleAddress(const u32 address);
 
 private:
-  static IDolphinProcess* m_instance;
-  static DolphinStatus m_status;
+  static DolphinInstance m_defaultInstance;
 };
 }  // namespace DolphinComm
