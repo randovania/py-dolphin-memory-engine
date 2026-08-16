@@ -6,6 +6,7 @@ def test_is_hooked_default():
     assert not dolphin_memory_engine.is_hooked()
     assert dolphin_memory_engine.get_pid() == -1
 
+
 def test_hook_unhook():
     dolphin_memory_engine.hook()
     dolphin_memory_engine.un_hook()
