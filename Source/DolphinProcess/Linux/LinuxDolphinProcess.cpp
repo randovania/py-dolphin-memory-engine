@@ -19,6 +19,12 @@ namespace DolphinComm
 {
 bool LinuxDolphinProcess::obtainEmuRAMInformations()
 {
+  m_emuRAMAddressStart = 0;
+  m_emuARAMAdressStart = 0;
+  m_MEM2AddressStart = 0;
+  m_MEM2Present = false;
+  m_ARAMAccessible = false;
+
   std::ifstream theMapsFile("/proc/" + std::to_string(m_PID) + "/maps");
   std::string line;
   bool MEM1Found = false;
@@ -102,17 +108,27 @@ bool LinuxDolphinProcess::obtainEmuRAMInformations()
   return false;
 }
 
-bool LinuxDolphinProcess::findPID()
+bool LinuxDolphinProcess::setPID(const int pid)
 {
-  DIR* directoryPointer = opendir("/proc/");
-  if (directoryPointer == nullptr)
+  if (pid <=0)
     return false;
 
-  static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
+  m_PID = pid;
+  return true;
+}
 
-  m_PID = -1;
+std::vector<int> LinuxDolphinProcess::getProcessIDs(const std::vector<std::string>& names)
+{
+  std::vector<int> pids;
+  if (names.empty())
+    return pids;
+
+  DIR* directoryPointer = opendir("/proc/");
+  if (directoryPointer == nullptr)
+    return pids;
+
   struct dirent* directoryEntry = nullptr;
-  while (m_PID == -1 && (directoryEntry = readdir(directoryPointer)))
+  while ((directoryEntry = readdir(directoryPointer)))
   {
     std::istringstream conversionStream(directoryEntry->d_name);
     int aPID = 0;
@@ -123,20 +139,19 @@ bool LinuxDolphinProcess::findPID()
     aCmdLineFile.open("/proc/" + std::string(directoryEntry->d_name) + "/comm");
     getline(aCmdLineFile, line);
 
-    const bool match{s_dolphinProcessName ? line == s_dolphinProcessName :
-                                            (line == "dolphin-emu" || line == "dolphin-emu-qt2" ||
-                                             line == "dolphin-emu-wx")};
-    if (match)
-      m_PID = aPID;
+    for (const auto& name : names)
+    {
+      if (line == name)
+      {
+        pids.push_back(aPID);
+        break;
+      }
+    }
 
     aCmdLineFile.close();
   }
   closedir(directoryPointer);
-
-  if (m_PID == -1)
-    // Here, Dolphin apparently isn't running on the system
-    return false;
-  return true;
+  return pids;
 }
 
 bool LinuxDolphinProcess::readFromRAM(const u32 offset, char* buffer, const size_t size,

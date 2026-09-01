@@ -11,8 +11,10 @@ namespace DolphinComm
 class WindowsDolphinProcess : public IDolphinProcess
 {
 public:
-  WindowsDolphinProcess() {}
-  bool findPID() override;
+  WindowsDolphinProcess();
+  ~WindowsDolphinProcess() override;
+  bool setPID(const int pid) override;
+  std::vector<int> getProcessIDs(const std::vector<std::string>& names) override;
   bool obtainEmuRAMInformations() override;
   bool readFromRAM(const u32 offset, char* buffer, const size_t size,
                    const bool withBSwap) override;
@@ -20,7 +22,7 @@ public:
                   const bool withBSwap) override;
 
 private:
-  HANDLE m_hDolphin;
+  HANDLE m_hDolphin = NULL;
 };
 }  // namespace DolphinComm
 #endif
