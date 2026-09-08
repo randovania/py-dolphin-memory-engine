@@ -12,39 +12,54 @@
 
 namespace DolphinComm
 {
-bool MacDolphinProcess::findPID()
+bool MacDolphinProcess::setPID(const int pid)
 {
+  if (pid <= 0)
+    return false;
+
+  m_PID = pid;
+  return true;
+}
+
+std::vector<int> MacDolphinProcess::getProcessIDs(const std::vector<std::string>& names)
+{
+  std::vector<int> pids;
+  if (names.empty())
+    return pids;
+
   static const int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
 
   size_t procSize = 0;
   if (sysctl((int*)mib, 4, NULL, &procSize, NULL, 0) == -1)
-    return false;
+    return pids;
 
   auto procs = std::make_unique<kinfo_proc[]>(procSize / sizeof(kinfo_proc));
   if (sysctl((int*)mib, 4, procs.get(), &procSize, NULL, 0) == -1)
-    return false;
+    return pids;
 
-  static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
-
-  m_PID = -1;
   for (int i = 0; i < procSize / sizeof(kinfo_proc); i++)
   {
     const std::string_view name{procs[i].kp_proc.p_comm};
-    const bool match{s_dolphinProcessName ? name == s_dolphinProcessName :
-                                            (name == "Dolphin" || name == "dolphin-emu")};
-    if (match)
+    for (const auto& candidate : names)
     {
-      m_PID = procs[i].kp_proc.p_pid;
+      if (name == candidate)
+      {
+        pids.push_back(procs[i].kp_proc.p_pid);
+        break;
+      }
     }
   }
-
-  if (m_PID == -1)
-    return false;
-  return true;
+  return pids;
 }
 
 bool MacDolphinProcess::obtainEmuRAMInformations()
 {
+  m_emuRAMAddressStart = 0;
+  m_emuARAMAdressStart = 0;
+  m_MEM2AddressStart = 0;
+  m_MEM2Present = false;
+  m_ARAMAccessible = false;
+
   m_currentTask = current_task();
   kern_return_t error = task_for_pid(m_currentTask, m_PID, &m_task);
   if (error != KERN_SUCCESS)
