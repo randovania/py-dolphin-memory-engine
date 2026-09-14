@@ -26,54 +26,93 @@ std::wstring utf8_to_wstring(const std::string& str)
 namespace DolphinComm
 {
 
-bool WindowsDolphinProcess::findPID()
+  WindowsDolphinProcess::WindowsDolphinProcess() : m_hDolphin(NULL)
+  {
+  }
+
+  WindowsDolphinProcess::~WindowsDolphinProcess()
+  {
+    if (m_hDolphin != NULL)
+    {
+      CloseHandle(m_hDolphin);
+      m_hDolphin = NULL;
+    }
+  }
+
+bool WindowsDolphinProcess::setPID(const int pid)
 {
+  if (m_hDolphin != NULL)
+  {
+    CloseHandle(m_hDolphin);
+    m_hDolphin = NULL;
+  }
+
+  if (pid <= 0)
+    return false;
+
+  m_PID = pid;
+
+  // Get the handle if Dolphin is running since it's required on Windows to read or write into the
+  // RAM of the process and to query the RAM mapping information
+  m_hDolphin = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_READ |
+      PROCESS_VM_WRITE, FALSE, m_PID);
+
+  if (m_hDolphin == NULL)
+    return false;
+  
+  return true;
+}
+
+std::vector<int> WindowsDolphinProcess::getProcessIDs(const std::vector<std::string>& names)
+{
+  std::vector<int> pids;
+  if (names.empty())
+    return pids;
+
   PROCESSENTRY32 entry;
   entry.dwSize = sizeof(PROCESSENTRY32);
 
-  static const char* const s_dolphinProcessName{std::getenv("DME_DOLPHIN_PROCESS_NAME")};
-
   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+  if (snapshot == INVALID_HANDLE_VALUE)
+    return pids;
 
-  m_PID = -1;
   if (Process32First(snapshot, &entry) == TRUE)
   {
     do
     {
 #ifdef UNICODE
       const std::wstring exeFile{entry.szExeFile};
-      const bool match{s_dolphinProcessName ?
-                           (exeFile == utf8_to_wstring(s_dolphinProcessName) ||
-                            exeFile == utf8_to_wstring(s_dolphinProcessName) + L".exe") :
-                           (exeFile == L"Dolphin.exe" || exeFile == L"DolphinQt2.exe" ||
-                            exeFile == L"DolphinWx.exe")};
+      bool match = false;
+      for (const auto& name : names)
+      {
+        const std::wstring wname = utf8_to_wstring(name);
+        if (exeFile == wname || exeFile == wname + L".exe")
+        {
+          match = true;
+          break;
+        }
+      }
 #else
       const std::string exeFile{entry.szExeFile};
-      const bool match{s_dolphinProcessName ?
-                           (exeFile == s_dolphinProcessName ||
-                            exeFile == std::string(s_dolphinProcessName) + ".exe") :
-                           (exeFile == "Dolphin.exe" || exeFile == "DolphinQt2.exe" ||
-                            exeFile == "DolphinWx.exe")};
+      bool match = false;
+      for (const auto& name : names)
+      {
+        if (exeFile == name || exeFile == name + ".exe")
+        {
+          match = true;
+          break;
+        }
+      }
 #endif
       if (match)
       {
-        m_PID = entry.th32ProcessID;
-        break;
+        pids.push_back(entry.th32ProcessID);
       }
     } while (Process32Next(snapshot, &entry) == TRUE);
   }
 
   CloseHandle(snapshot);
-  if (m_PID == -1)
-    // Here, Dolphin doesn't appear to be running on the system
-    return false;
-
-  // Get the handle if Dolphin is running since it's required on Windows to read or write into the
-  // RAM of the process and to query the RAM mapping information
-  m_hDolphin = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_READ |
-                               PROCESS_VM_WRITE,
-                           FALSE, m_PID);
-  return true;
+  return pids;
 }
 
 bool WindowsDolphinProcess::obtainEmuRAMInformations()
