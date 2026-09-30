@@ -18,6 +18,7 @@ endif(APPLE)
 
 set(SRCS ${DolphinProcessSrc}
          DolphinProcess/DolphinAccessor.cpp
+         DolphinProcess/DolphinInstance.cpp
          Common/MemoryCommon.cpp
          MemoryWatch/MemWatchEntry.cpp
          MemoryScanner/MemoryScanner.cpp)
