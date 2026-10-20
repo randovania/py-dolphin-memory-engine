@@ -5,6 +5,7 @@
 
 #include "../Common/CommonTypes.h"
 #include "../Common/MemoryCommon.h"
+#include "../DolphinProcess/DolphinInstance.h"
 
 class MemWatchEntry
 {
@@ -15,6 +16,10 @@ public:
                 const bool m_isUnsigned = false, const size_t length = 1,
                 const bool isBoundToPointer = false);
   MemWatchEntry(MemWatchEntry* entry);
+  MemWatchEntry(const MemWatchEntry&);
+  MemWatchEntry(MemWatchEntry&&) noexcept;
+  MemWatchEntry& operator=(const MemWatchEntry&);
+  MemWatchEntry& operator=(MemWatchEntry&&) noexcept;
   ~MemWatchEntry();
 
   std::string getLabel() const;
@@ -40,6 +45,8 @@ public:
   void addOffset(const int offset);
   void removeOffset();
 
+  void setTargetProcess(DolphinComm::DolphinInstance* targetProcess);
+
   Common::MemOperationReturnCode freeze();
 
   u32 getAddressForPointerLevel(const int level);
@@ -52,6 +59,13 @@ public:
 private:
   Common::MemOperationReturnCode writeMemoryToRAM(const char* memory, const size_t size);
 
+  // routes to m_targetProcess if it was set and still hooked, otherwise falls back to DolphinAccessor
+  bool targetReadFromRAM(const u32 offset, char* buffer, const size_t size, const bool withBSwap);
+  bool targetWriteToRAM(const u32 offset, const char* buffer, const size_t size, const bool withBSwap);
+  bool targetIsARAMAccessible();
+  bool targetIsValidConsoleAddress(const u32 address);
+
+  DolphinComm::DolphinInstance* m_targetProcess = nullptr;
   std::string m_label;
   u32 m_consoleAddress;
   bool m_lock = false;

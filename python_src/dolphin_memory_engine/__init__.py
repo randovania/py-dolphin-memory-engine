@@ -1,7 +1,11 @@
 from dolphin_memory_engine._dolphin_memory_engine import (
+    DolphinProcess,
+    DolphinStatus,
     MemWatch,
     assert_hooked,
     follow_pointers,
+    get_pid,
+    get_process_ids,
     get_status,
     hook,
     is_hooked,
@@ -19,13 +23,17 @@ from dolphin_memory_engine._dolphin_memory_engine import (
 )
 
 __all__ = [
+    "DolphinProcess",
     "MemWatch",
+    "DolphinStatus",
     "assert_hooked",
     "follow_pointers",
     "hook",
     "un_hook",
     "is_hooked",
     "get_status",
+    "get_pid",
+    "get_process_ids",
     "read_byte",
     "read_bytes",
     "read_double",
