@@ -1,11 +1,10 @@
 #include "MemWatchEntry.h"
 
-#include <bitset>
+#include <algorithm>
 #include <cstring>
-#include <iomanip>
 #include <ios>
-#include <limits>
 #include <sstream>
+#include <utility>
 
 #include "../Common/CommonUtils.h"
 #include "../DolphinProcess/DolphinAccessor.h"
@@ -38,6 +37,130 @@ MemWatchEntry::MemWatchEntry(MemWatchEntry* entry)
 {
   m_memory = new char[getSizeForType(entry->getType(), entry->getLength())];
   std::memcpy(m_memory, entry->getMemory(), getSizeForType(entry->getType(), entry->getLength()));
+}
+
+MemWatchEntry::MemWatchEntry(const MemWatchEntry& other)
+  : m_targetProcess(other.m_targetProcess), 
+    m_label(other.m_label),
+    m_consoleAddress(other.m_consoleAddress),
+    m_lock(other.m_lock),
+    m_type(other.m_type),
+    m_base(other.m_base),
+    m_isUnsigned(other.m_isUnsigned),
+    m_boundToPointer(other.m_boundToPointer),
+    m_pointerOffsets(other.m_pointerOffsets),
+    m_isValidPointer(other.m_isValidPointer),
+    m_length(other.m_length),
+    m_freezeMemSize(other.m_freezeMemSize)
+{
+  size_t memSize = Common::getSizeForType(m_type, m_length);
+  m_memory = new char[memSize];
+  if (other.m_memory)
+    std::memcpy(m_memory, other.m_memory, memSize);
+  else
+    std::fill(m_memory, m_memory + memSize, 0);
+
+  if (other.m_freezeMemory && m_freezeMemSize > 0)
+  {
+    m_freezeMemory = new char[m_freezeMemSize];
+    std::memcpy(m_freezeMemory, other.m_freezeMemory, m_freezeMemSize);
+  }
+  else 
+  {
+    m_freezeMemory = nullptr;
+  }
+}
+
+MemWatchEntry::MemWatchEntry(MemWatchEntry&& other) noexcept
+  : m_targetProcess(other.m_targetProcess), 
+    m_label(std::move(other.m_label)),
+    m_consoleAddress(other.m_consoleAddress),
+    m_lock(other.m_lock),
+    m_type(other.m_type),
+    m_base(other.m_base),
+    m_isUnsigned(other.m_isUnsigned),
+    m_boundToPointer(other.m_boundToPointer),
+    m_pointerOffsets(std::move(other.m_pointerOffsets)),
+    m_isValidPointer(other.m_isValidPointer),
+    m_memory(other.m_memory),
+    m_freezeMemory(other.m_freezeMemory),
+    m_freezeMemSize(other.m_freezeMemSize),
+    m_length(other.m_length)
+{
+  other.m_memory = nullptr;
+  other.m_freezeMemory = nullptr;
+  other.m_targetProcess = nullptr;
+}
+
+MemWatchEntry& MemWatchEntry::operator=(const MemWatchEntry& other)
+{
+  if (this == &other)
+    return *this;
+
+  delete[] m_memory;
+  delete[] m_freezeMemory;
+
+  m_targetProcess = other.m_targetProcess;
+  m_label = other.m_label;
+  m_consoleAddress = other.m_consoleAddress;
+  m_lock = other.m_lock;
+  m_type = other.m_type;
+  m_base = other.m_base;
+  m_isUnsigned = other.m_isUnsigned;
+  m_boundToPointer = other.m_boundToPointer;
+  m_pointerOffsets = other.m_pointerOffsets;
+  m_isValidPointer = other.m_isValidPointer;
+  m_length = other.m_length; 
+  m_freezeMemSize = other.m_freezeMemSize;
+
+  size_t memSize = Common::getSizeForType(m_type, m_length);
+  m_memory = new char[memSize];
+  if (other.m_memory)
+    std::memcpy(m_memory, other.m_memory, memSize);
+  else
+    std::fill(m_memory, m_memory + memSize, 0);
+
+  if (other.m_freezeMemory && m_freezeMemSize > 0)
+  {
+    m_freezeMemory = new char[m_freezeMemSize];
+    std::memcpy(m_freezeMemory, other.m_freezeMemory, m_freezeMemSize);
+  }
+  else 
+  {
+    m_freezeMemory = nullptr;
+  }
+
+  return *this;
+}
+
+MemWatchEntry& MemWatchEntry::operator=(MemWatchEntry&& other) noexcept
+{
+  if (this == &other)
+    return *this;
+
+  delete[] m_memory;
+  delete[] m_freezeMemory;
+
+  m_targetProcess = other.m_targetProcess;
+  m_label = std::move(other.m_label);
+  m_consoleAddress = other.m_consoleAddress;
+  m_lock = other.m_lock; 
+  m_type = other.m_type;
+  m_base = other.m_base; 
+  m_isUnsigned = other.m_isUnsigned; 
+  m_boundToPointer = other.m_boundToPointer;
+  m_pointerOffsets = std::move(other.m_pointerOffsets); 
+  m_isValidPointer = other.m_isValidPointer;
+  m_memory = other.m_memory; 
+  m_freezeMemory = other.m_freezeMemory; 
+  m_freezeMemSize = other.m_freezeMemSize;
+  m_length = other.m_length;
+
+  other.m_memory = nullptr;
+  other.m_freezeMemory = nullptr;
+  other.m_targetProcess = nullptr;
+
+  return *this;
 }
 
 MemWatchEntry::~MemWatchEntry()
@@ -180,6 +303,42 @@ void MemWatchEntry::addOffset(const int offset)
   m_pointerOffsets.push_back(offset);
 }
 
+void MemWatchEntry::setTargetProcess(DolphinComm::DolphinInstance* targetProcess)
+{
+  m_targetProcess = targetProcess;
+}
+
+bool MemWatchEntry::targetReadFromRAM(const u32 offset, char* buffer, const size_t size, const bool withBSwap)
+{
+  if (m_targetProcess)
+    return m_targetProcess->isValid() && m_targetProcess->readFromRAM(offset, buffer, size, withBSwap);
+
+  return DolphinComm::DolphinAccessor::readFromRAM(offset, buffer, size, withBSwap);
+}
+
+bool MemWatchEntry::targetWriteToRAM(const u32 offset, const char* buffer, const size_t size, const bool withBSwap)
+{
+  if (m_targetProcess)
+    return m_targetProcess->isValid() && m_targetProcess->writeToRAM(offset, buffer, size, withBSwap);
+
+  return DolphinComm::DolphinAccessor::writeToRAM(offset, buffer, size, withBSwap);
+}
+
+bool MemWatchEntry::targetIsARAMAccessible()
+{
+  if (m_targetProcess)
+    return m_targetProcess->isValid() && m_targetProcess->isARAMAccessible();
+  return DolphinComm::DolphinAccessor::isARAMAccessible();
+}
+
+bool MemWatchEntry::targetIsValidConsoleAddress(const u32 address)
+{
+  if (m_targetProcess)
+    return m_targetProcess->isValid() && m_targetProcess->isValidConsoleAddress(address);
+
+  return DolphinComm::DolphinAccessor::isValidConsoleAddress(address);
+}
+
 Common::MemOperationReturnCode MemWatchEntry::freeze()
 {
   Common::MemOperationReturnCode writeCode = writeMemoryToRAM(m_freezeMemory, m_freezeMemSize);
@@ -195,12 +354,12 @@ u32 MemWatchEntry::getAddressForPointerLevel(const int level)
   char addressBuffer[sizeof(u32)] = {0};
   for (int i = 0; i < level; ++i)
   {
-    if (DolphinComm::DolphinAccessor::readFromRAM(
-            Common::dolphinAddrToOffset(address, DolphinComm::DolphinAccessor::isARAMAccessible()),
+    if (targetReadFromRAM(
+            Common::dolphinAddrToOffset(address, targetIsARAMAccessible()),
             addressBuffer, sizeof(u32), true))
     {
       std::memcpy(&address, addressBuffer, sizeof(u32));
-      if (DolphinComm::DolphinAccessor::isValidConsoleAddress(address))
+      if (targetIsValidConsoleAddress(address))
         address += m_pointerOffsets.at(i);
       else
         return 0;
@@ -236,13 +395,13 @@ Common::MemOperationReturnCode MemWatchEntry::readMemoryFromRAM()
     char realConsoleAddressBuffer[sizeof(u32)] = {0};
     for (int offset : m_pointerOffsets)
     {
-      if (DolphinComm::DolphinAccessor::readFromRAM(
+      if (targetReadFromRAM(
               Common::dolphinAddrToOffset(realConsoleAddress,
-                                          DolphinComm::DolphinAccessor::isARAMAccessible()),
+                                          targetIsARAMAccessible()),
               realConsoleAddressBuffer, sizeof(u32), true))
       {
         std::memcpy(&realConsoleAddress, realConsoleAddressBuffer, sizeof(u32));
-        if (DolphinComm::DolphinAccessor::isValidConsoleAddress(realConsoleAddress))
+        if (targetIsValidConsoleAddress(realConsoleAddress))
         {
           realConsoleAddress += offset;
         }
@@ -261,12 +420,12 @@ Common::MemOperationReturnCode MemWatchEntry::readMemoryFromRAM()
     m_isValidPointer = true;
   }
 
-  if (!DolphinComm::DolphinAccessor::isValidConsoleAddress(realConsoleAddress))
+  if (!targetIsValidConsoleAddress(realConsoleAddress))
     return Common::MemOperationReturnCode::OK;
 
-  if (DolphinComm::DolphinAccessor::readFromRAM(
+  if (targetReadFromRAM(
           Common::dolphinAddrToOffset(realConsoleAddress,
-                                      DolphinComm::DolphinAccessor::isARAMAccessible()),
+                                      targetIsARAMAccessible()),
           m_memory, getSizeForType(m_type, m_length), shouldBeBSwappedForType(m_type)))
     return Common::MemOperationReturnCode::OK;
   return Common::MemOperationReturnCode::operationFailed;
@@ -281,13 +440,13 @@ Common::MemOperationReturnCode MemWatchEntry::writeMemoryToRAM(const char* memor
     char realConsoleAddressBuffer[sizeof(u32)] = {0};
     for (int offset : m_pointerOffsets)
     {
-      if (DolphinComm::DolphinAccessor::readFromRAM(
+      if (targetReadFromRAM(
               Common::dolphinAddrToOffset(realConsoleAddress,
-                                          DolphinComm::DolphinAccessor::isARAMAccessible()),
+                                          targetIsARAMAccessible()),
               realConsoleAddressBuffer, sizeof(u32), true))
       {
         std::memcpy(&realConsoleAddress, realConsoleAddressBuffer, sizeof(u32));
-        if (DolphinComm::DolphinAccessor::isValidConsoleAddress(realConsoleAddress))
+        if (targetIsValidConsoleAddress(realConsoleAddress))
         {
           realConsoleAddress += offset;
         }
@@ -306,12 +465,12 @@ Common::MemOperationReturnCode MemWatchEntry::writeMemoryToRAM(const char* memor
     m_isValidPointer = true;
   }
 
-  if (!DolphinComm::DolphinAccessor::isValidConsoleAddress(realConsoleAddress))
+  if (!targetIsValidConsoleAddress(realConsoleAddress))
     return Common::MemOperationReturnCode::OK;
 
-  if (DolphinComm::DolphinAccessor::writeToRAM(
+  if (targetWriteToRAM(
           Common::dolphinAddrToOffset(realConsoleAddress,
-                                      DolphinComm::DolphinAccessor::isARAMAccessible()),
+                                      targetIsARAMAccessible()),
           memory, size, shouldBeBSwappedForType(m_type)))
     return Common::MemOperationReturnCode::OK;
   return Common::MemOperationReturnCode::operationFailed;
